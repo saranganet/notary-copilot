@@ -20,10 +20,11 @@ export const FingerprintModal: React.FC<FingerprintModalProps> = ({
   const [quality, setQuality] = useState<number>(0);
   const [hardwareDetected, setHardwareDetected] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('Ready to scan thumb impression.');
-  const [usePhysicalHardware, setUsePhysicalHardware] = useState<boolean>(false);
+  const isWindows = typeof navigator !== 'undefined' && /Win/i.test(navigator.userAgent);
+  const [usePhysicalHardware, setUsePhysicalHardware] = useState<boolean>(() => isWindows);
 
   const checkDevice = async () => {
-    setStatusMessage('Checking SecuGen USB scanner...');
+    setStatusMessage('Checking SecuGen USB scanner (Port 8443)...');
     const res = await SecuGenService.testDeviceConnection();
     if (res.connected) {
       setHardwareDetected(true);
@@ -31,8 +32,7 @@ export const FingerprintModal: React.FC<FingerprintModalProps> = ({
       setStatusMessage(res.message);
     } else {
       setHardwareDetected(false);
-      setUsePhysicalHardware(false);
-      setStatusMessage('SecuGen hardware service not active on localhost:8000. Hardware simulator ready.');
+      setStatusMessage(res.message);
     }
   };
 

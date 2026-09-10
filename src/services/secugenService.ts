@@ -1,20 +1,20 @@
 import type { SecuGenCaptureResult } from '../types/notary';
 
 const CANDIDATE_ENDPOINTS = [
-  'https://localhost:8000',
-  'https://127.0.0.1:8000',
   'https://localhost:8443',
   'https://127.0.0.1:8443',
+  'https://localhost:8000',
+  'https://127.0.0.1:8000',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
 ];
 
 /**
  * Service to communicate with physical SecuGen Fingerprint Scanner via SecuGen WebAPI
- * with an integrated fallback simulator for testing on systems without the physical device.
+ * using the exact protocol from official SecuGen Demo 1 & Demo 2 (Port 8443, POST).
  */
 export class SecuGenService {
-  private static activeEndpoint: string = 'https://localhost:8000';
+  private static activeEndpoint: string = 'https://localhost:8443';
   private static useSimulatorFallback: boolean = false;
 
   public static getActiveEndpoint(): string {
@@ -22,41 +22,96 @@ export class SecuGenService {
   }
 
   public static getDiagnosticUrl(): string {
-    return `${this.activeEndpoint}/SGIDDInfo`;
+    return `${this.activeEndpoint}/SGIFPCapture`;
   }
 
   /**
-   * Test if the SecuGen WebAPI client is installed and running on localhost/127.0.0.1
+   * Calls SecuGen WebAPI using the exact protocol from official Demo 1 and Demo 2:
+   * POST to https://localhost:8443/SGIFPCapture with application/x-www-form-urlencoded params
+   */
+  public static async callSecuGenNativeCapture(
+    endpoint: string = 'https://localhost:8443',
+    qualityThreshold: number = 50,
+    timeoutMs: number = 10000
+  ): Promise<any> {
+    const params = new URLSearchParams({
+      Timeout: timeoutMs.toString(),
+      Quality: qualityThreshold.toString(),
+      licstr: '',
+      templateFormat: 'ISO',
+      imageWSQRate: '0.75',
+    });
+
+    return new Promise((resolve, reject) => {
+      // First try XMLHttpRequest (identical to SecuGen Demo 1)
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${endpoint}/SGIFPCapture`, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.timeout = timeoutMs + 3000;
+
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                const parsed = JSON.parse(xhr.responseText);
+                resolve(parsed);
+              } catch (e) {
+                reject(new Error('Invalid JSON from SecuGen WebAPI'));
+              }
+            } else {
+              reject(new Error(`SecuGen WebAPI HTTP ${xhr.status}: ${xhr.statusText || 'Service Unreachable'}`));
+            }
+          }
+        };
+
+        xhr.onerror = function () {
+          reject(new Error(`SecuGen connection refused on ${endpoint}`));
+        };
+
+        xhr.ontimeout = function () {
+          reject(new Error(`SecuGen capture timed out on ${endpoint}`));
+        };
+
+        xhr.send(params.toString());
+      } catch {
+        // Fallback to fetch POST
+        fetch(`${endpoint}/SGIFPCapture`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+        })
+          .then((res) => res.json())
+          .then(resolve)
+          .catch(reject);
+      }
+    });
+  }
+
+  /**
+   * Test if the SecuGen WebAPI client is installed and running on localhost:8443 / 8000
    */
   public static async testDeviceConnection(): Promise<{ connected: boolean; endpoint?: string; message: string }> {
     const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent);
 
     for (const endpoint of CANDIDATE_ENDPOINTS) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        // Quick probe to endpoint with 100ms timeout
+        const data = await this.callSecuGenNativeCapture(endpoint, 50, 100);
 
-        const response = await fetch(`${endpoint}/SGIDDInfo`, {
-          method: 'GET',
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response && response.ok) {
-          const data = await response.json();
+        if (data && typeof data.ErrorCode !== 'undefined') {
           this.activeEndpoint = endpoint;
-          if (data.ErrorCode === 51) {
+          if (data.ErrorCode === 53 || data.ErrorCode === 55) {
             return {
               connected: false,
               endpoint,
-              message: 'SecuGen WebAPI service is running, but USB scanner is unplugged. Please plug in your SecuGen reader.',
+              message: `SecuGen WebAPI Online (${endpoint}), but USB reader not detected. Please plug in scanner.`,
             };
           }
           return {
             connected: true,
             endpoint,
-            message: `SecuGen Scanner Online (${endpoint}, Device: ${data.DeviceID ?? 'Hamster Pro 20'})`,
+            message: `SecuGen Scanner Online (${endpoint}, Status: Ready)`,
           };
         }
       } catch {
@@ -73,7 +128,7 @@ export class SecuGenService {
 
     return {
       connected: false,
-      message: 'SecuGen WebAPI service not detected on localhost:8000. Ensure WebAPI service is running on Windows, or click "Test Localhost:8000" below to approve SSL in Chrome.',
+      message: 'SecuGen WebAPI not detected on localhost:8443. Open https://localhost:8443/SGIFPCapture once in Chrome to allow connection.',
     };
   }
 
@@ -88,77 +143,64 @@ export class SecuGenService {
       return this.simulateBiometricCapture(qualityThreshold);
     }
 
+    let data: any = null;
+    let lastError: any = null;
+
+    // Try primary active endpoint first
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 14000); // 14 seconds capture window
-
-      const params = new URLSearchParams({
-        Timeout: '10000',
-        Quality: qualityThreshold.toString(),
-        templateFormat: 'ISO',
-        imageWSQRate: '0.75',
-      });
-
-      // Attempt primary active endpoint first
-      let response = await fetch(`${this.activeEndpoint}/SGIFPCapture?${params.toString()}`, {
-        method: 'GET',
-        signal: controller.signal,
-      }).catch(() => null);
-
-      // If failed, probe other candidates
-      if (!response || !response.ok) {
-        for (const ep of CANDIDATE_ENDPOINTS) {
-          if (ep === this.activeEndpoint) continue;
-          try {
-            const probeRes = await fetch(`${ep}/SGIFPCapture?${params.toString()}`, {
-              method: 'GET',
-              signal: controller.signal,
-            });
-            if (probeRes && probeRes.ok) {
-              response = probeRes;
-              this.activeEndpoint = ep;
-              break;
-            }
-          } catch {
-            // Next
+      data = await this.callSecuGenNativeCapture(this.activeEndpoint, qualityThreshold, 10000);
+    } catch (err) {
+      lastError = err;
+      // Probe other candidate endpoints if primary fails
+      for (const ep of CANDIDATE_ENDPOINTS) {
+        if (ep === this.activeEndpoint) continue;
+        try {
+          data = await this.callSecuGenNativeCapture(ep, qualityThreshold, 10000);
+          if (data && typeof data.ErrorCode !== 'undefined') {
+            this.activeEndpoint = ep;
+            break;
           }
+        } catch {
+          // Next
         }
       }
+    }
 
-      clearTimeout(timeoutId);
+    if (!data) {
+      console.warn('SecuGen physical capture failed:', lastError);
+      return {
+        success: false,
+        errorCode: -1,
+        errorMessage: 'Cannot connect to SecuGen WebAPI on localhost:8443. Ensure SecuGen service is running on Windows.',
+        qualityScore: 0,
+      };
+    }
 
-      if (!response || !response.ok) {
-        throw new Error('SecuGen device communication error');
-      }
+    if (data.ErrorCode === 0) {
+      // ErrorCode 0 means SUCCESS in SecuGen WebAPI
+      const rawBmp = data.BMPBase64 || '';
+      const bmpBase64 = rawBmp.length > 0
+        ? (rawBmp.startsWith('data:image') ? rawBmp : `data:image/bmp;base64,${rawBmp}`)
+        : undefined;
 
-      const data = await response.json();
+      const rawQuality = data.ImageQuality ?? data.Quality ?? 88;
+      const qualityScore = typeof rawQuality === 'string' ? parseInt(rawQuality, 10) : Number(rawQuality);
 
-      if (data.ErrorCode === 0) {
-        // ErrorCode 0 means SUCCESS in SecuGen WebAPI
-        const bmpBase64 = data.BMPBase64
-          ? `data:image/bmp;base64,${data.BMPBase64}`
-          : undefined;
-
-        return {
-          success: true,
-          errorCode: 0,
-          imageBmpBase64: bmpBase64,
-          isoTemplateBase64: data.ISOTemplateBase64,
-          qualityScore: data.Quality || 88,
-          isSimulated: false,
-        };
-      } else {
-        return {
-          success: false,
-          errorCode: data.ErrorCode,
-          errorMessage: this.mapSecuGenErrorCode(data.ErrorCode),
-          qualityScore: 0,
-        };
-      }
-    } catch (err: any) {
-      console.warn('Physical SecuGen capture failed, falling back to simulator:', err);
-      // Fallback to high-fidelity realistic biometric simulator
-      return this.simulateBiometricCapture(qualityThreshold);
+      return {
+        success: true,
+        errorCode: 0,
+        imageBmpBase64: bmpBase64,
+        isoTemplateBase64: data.TemplateBase64 ?? data.ISOTemplateBase64,
+        qualityScore: isNaN(qualityScore) ? 88 : qualityScore,
+        isSimulated: false,
+      };
+    } else {
+      return {
+        success: false,
+        errorCode: data.ErrorCode,
+        errorMessage: this.mapSecuGenErrorCode(data.ErrorCode),
+        qualityScore: 0,
+      };
     }
   }
 
@@ -267,24 +309,34 @@ export class SecuGenService {
     switch (code) {
       case 0:
         return 'Success';
-      case 1:
-        return 'Creation failed';
-      case 2:
-        return 'Function failed';
-      case 3:
-        return 'Invalid parameter';
       case 51:
-        return 'Device not found. Please verify USB connection.';
+        return 'System file load failure (SecuGen driver)';
       case 52:
-        return 'Device open failed. Another application may be using the scanner.';
+        return 'Sensor chip initialization failed';
       case 53:
-        return 'Device capture timed out. Place finger firmly on sensor.';
+        return 'Device not found. Please plug in the SecuGen USB scanner.';
       case 54:
-        return 'Sensor timed out waiting for finger.';
+        return 'Fingerprint image capture timeout. Place thumb firmly on the sensor.';
+      case 55:
+        return 'No device available. Re-insert the USB cable.';
+      case 56:
+        return 'Driver load failed';
+      case 57:
+        return 'Wrong image data captured';
+      case 58:
+        return 'Lack of USB bandwidth';
+      case 59:
+        return 'Device Busy - another application may be accessing the scanner';
+      case 60:
+        return 'Cannot get serial number of the device';
+      case 61:
+        return 'Unsupported device model';
+      case 63:
+        return "SgiBioSrv service didn't start. Please restart SecuGen WebAPI service.";
       case 101:
         return 'Fingerprint quality below minimum threshold. Please press firmly.';
       default:
-        return `SecuGen hardware error code: ${code}`;
+        return `SecuGen hardware response code: ${code}`;
     }
   }
 }
