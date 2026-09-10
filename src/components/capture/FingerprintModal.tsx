@@ -230,38 +230,60 @@ export const FingerprintModal: React.FC<FingerprintModalProps> = ({
           {!hardwareDetected && (
             <div
               style={{
-                marginTop: '0.5rem',
+                marginTop: '0.65rem',
                 fontSize: '0.74rem',
-                color: '#475569',
-                background: '#F1F5F9',
-                padding: '5px 10px',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                flexWrap: 'wrap',
-                border: '1px solid #CBD5E1',
+                color: '#334155',
+                background: typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent) ? '#EFF6FF' : '#FEF3C7',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                textAlign: 'left',
+                border: typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent) ? '1px solid #BFDBFE' : '1px solid #FDE68A',
+                lineHeight: '1.45',
               }}
             >
-              <span>Using SecuGen on Windows?</span>
-              <a
-                href={SecuGenService.getDiagnosticUrl()}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'underline' }}
-                title="Click to test and allow localhost connection in browser"
-              >
-                Test Localhost:8000
-              </a>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={checkDevice}
-                style={{ padding: '2px 6px', fontSize: '0.68rem' }}
-              >
-                <RefreshCw size={11} /> Re-Check
-              </button>
+              {typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent) ? (
+                <div>
+                  <div style={{ fontWeight: 700, color: '#1E40AF', marginBottom: '2px' }}>
+                    💻 You are on macOS
+                  </div>
+                  <div>
+                    SecuGen does not make USB drivers for Mac — their hardware WebAPI is <strong>Windows-only</strong>.
+                    The built-in <strong>Simulator Mode</strong> is active so you can test all certificate creation, photos, and printing right now. On Mom's Windows laptop, the USB reader will connect directly!
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontWeight: 700, color: '#92400E', marginBottom: '2px' }}>
+                    🔌 SecuGen Windows Troubleshooting:
+                  </div>
+                  <ol style={{ paddingLeft: '1.1rem', margin: '4px 0' }}>
+                    <li>Ensure <strong>SecuGen WebAPI Client</strong> is installed (<a href="https://secugen.com/webapi/" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', color: 'var(--color-primary)' }}>Download</a>).</li>
+                    <li>Verify the scanner is plugged into a USB port.</li>
+                    <li>
+                      If running from web/Vercel:{' '}
+                      <a
+                        href={SecuGenService.getDiagnosticUrl()}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'underline' }}
+                      >
+                        Click here to approve localhost:8000
+                      </a>{' '}
+                      in Chrome (Advanced → Proceed).
+                    </li>
+                  </ol>
+                  <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={checkDevice}
+                      style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                    >
+                      <RefreshCw size={11} /> Check Again
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

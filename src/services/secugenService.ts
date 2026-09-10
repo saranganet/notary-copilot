@@ -29,6 +29,8 @@ export class SecuGenService {
    * Test if the SecuGen WebAPI client is installed and running on localhost/127.0.0.1
    */
   public static async testDeviceConnection(): Promise<{ connected: boolean; endpoint?: string; message: string }> {
+    const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent);
+
     for (const endpoint of CANDIDATE_ENDPOINTS) {
       try {
         const controller = new AbortController();
@@ -44,10 +46,17 @@ export class SecuGenService {
         if (response && response.ok) {
           const data = await response.json();
           this.activeEndpoint = endpoint;
+          if (data.ErrorCode === 51) {
+            return {
+              connected: false,
+              endpoint,
+              message: 'SecuGen WebAPI service is running, but USB scanner is unplugged. Please plug in your SecuGen reader.',
+            };
+          }
           return {
             connected: true,
             endpoint,
-            message: `SecuGen Scanner Online (${endpoint}, Device: ${data.DeviceID || 'Hamster Pro 20'})`,
+            message: `SecuGen Scanner Online (${endpoint}, Device: ${data.DeviceID ?? 'Hamster Pro 20'})`,
           };
         }
       } catch {
@@ -55,9 +64,16 @@ export class SecuGenService {
       }
     }
 
+    if (isMac) {
+      return {
+        connected: false,
+        message: 'macOS detected: SecuGen hardware WebAPI runs exclusively on Windows. Biometric Simulator is active for testing on Mac.',
+      };
+    }
+
     return {
       connected: false,
-      message: 'SecuGen WebAPI service not detected on localhost:8000. Hardware simulator ready.',
+      message: 'SecuGen WebAPI service not detected on localhost:8000. Ensure WebAPI service is running on Windows, or click "Test Localhost:8000" below to approve SSL in Chrome.',
     };
   }
 
