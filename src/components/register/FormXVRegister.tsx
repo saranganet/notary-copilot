@@ -240,11 +240,11 @@ export const FormXVRegister: React.FC<FormXVRegisterProps> = ({
                 {t.registerTitle}
               </h2>
               <p style={{ fontSize: '0.78rem', color: '#475569' }}>
-                {lang === 'mr' ? 'नॉटरी:' : 'Notary Public:'} <strong>{profile.notaryName}</strong> | {profile.regNo} | {profile.areaOfPractice}
+                {lang === 'mr' ? 'नॉटरी:' : lang === 'hi' ? 'नोटरी:' : 'Notary Public:'} <strong>{profile.notaryName}</strong> | {profile.regNo} | {profile.areaOfPractice}
               </p>
             </div>
             <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#64748B' }}>
-              {t.certBookNo} <strong>1</strong> | Showing {filteredActs.length} of {acts.length} Entries
+              {t.certBookNo} <strong>1</strong> | {lang === 'mr' ? `${acts.length} पैकी ${filteredActs.length} नोंदी दाखवत आहे` : lang === 'hi' ? `${acts.length} में से ${filteredActs.length} प्रविष्टियां प्रदर्शित` : `Showing ${filteredActs.length} of ${acts.length} Entries`}
             </div>
           </div>
         </div>
@@ -270,7 +270,7 @@ export const FormXVRegister: React.FC<FormXVRegisterProps> = ({
               {filteredActs.length === 0 ? (
                 <tr>
                   <td colSpan={9} style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94A3B8' }}>
-                    {lang === 'mr' ? 'कोणतीही नोंद आढळली नाही.' : 'No notarial acts found matching your search.'}
+                    {lang === 'mr' ? 'कोणतीही नोंद आढळली नाही.' : lang === 'hi' ? 'कोई प्रविष्टि नहीं मिली।' : 'No notarial acts found matching your search.'}
                   </td>
                 </tr>
               ) : (

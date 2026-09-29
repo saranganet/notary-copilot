@@ -93,3 +93,33 @@ export interface SecuGenCaptureResult {
   qualityScore: number;
   isSimulated?: boolean;
 }
+
+export interface LegalDraft {
+  id: string;
+  title: string;
+  contentHtml: string;
+  stampPaperMargin: boolean;
+  actId?: string;
+  updatedAt: string;
+}
+
+export interface NotaryAccount {
+  username: string;
+  password: string;
+  role: 'admin' | 'notary';
+  profile: NotaryProfile;
+  createdAt: string;
+}
+
+export interface AccessRequest {
+  id: string;
+  applicantName: string;
+  regNo: string;
+  mobile: string;
+  email: string;
+  jurisdiction: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedAt: string;
+  notes?: string;
+}
+

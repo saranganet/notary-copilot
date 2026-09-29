@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <!-- Rich red gradient -->
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626" />
+      <stop offset="50%" stop-color="#B91C1C" />
+      <stop offset="100%" stop-color="#7F1D1D" />
+    </linearGradient>
+    
+    <!-- Subtle drop shadow -->
+    <filter id="sealShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+
+    <!-- Circular text paths -->
+    <path id="topTextArc" d="M 32,100 A 68,68 0 1,1 168,100" fill="none" />
+    <path id="bottomTextArc" d="M 168,100 A 68,68 0 0,1 32,100" fill="none" />
+  </defs>
+
+  <!-- Outer Cog / Serrated Seal Edge Ring -->
+  <circle cx="100" cy="100" r="96" fill="url(#redGradient)" filter="url(#sealShadow)" />
+  
+  <!-- Outer Beaded / Dashed Ring -->
+  <circle cx="100" cy="100" r="91" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="3 3" opacity="0.9" />
+  
+  <!-- Outer Solid Ring -->
+  <circle cx="100" cy="100" r="85" fill="none" stroke="#FFFFFF" stroke-width="2.5" />
+  
+  <!-- Inner Rim Solid Ring -->
+  <circle cx="100" cy="100" r="54" fill="none" stroke="#FFFFFF" stroke-width="2" />
+  <circle cx="100" cy="100" r="51" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" opacity="0.8" />
+
+  <!-- Circular Upper Text: NOTARY PUBLIC -->
+  <text font-family="'Plus Jakarta Sans', 'Inter', Arial, sans-serif" font-size="11.5" font-weight="900" fill="#FFFFFF" letter-spacing="3.2">
+    <textPath href="#topTextArc" startOffset="50%" text-anchor="middle">
+      ★ NOTARY PUBLIC ★
+    </textPath>
+  </text>
+
+  <!-- Circular Lower Text: GOVT. OF INDIA -->
+  <text font-family="'Plus Jakarta Sans', 'Inter', Arial, sans-serif" font-size="10" font-weight="800" fill="#FFFFFF" letter-spacing="2.5">
+    <textPath href="#bottomTextArc" startOffset="50%" text-anchor="middle">
+      • GOVT. OF INDIA •
+    </textPath>
+  </text>
+
+  <!-- Center Emblem: Scales of Justice & Law Pillar in Pure White -->
+  <g transform="translate(100, 100)" fill="#FFFFFF" stroke="#FFFFFF">
+    <!-- Center Top Finial / Spire -->
+    <circle cx="0" cy="-33" r="3" fill="#FFFFFF" stroke="none" />
+    <path d="M-1,-30 L1,-30 L1.5,-23 L-1.5,-23 Z" fill="#FFFFFF" stroke="none" />
+    
+    <!-- Balance Beam / Central Fulcrum -->
+    <path d="M-28,-23 Q 0,-26 28,-23" fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" />
+    <circle cx="0" cy="-24.5" r="3.2" fill="#FFFFFF" stroke="none" />
+    
+    <!-- Left Balance Pan -->
+    <line x1="-26" y1="-23" x2="-35" y2="-8" stroke="#FFFFFF" stroke-width="1.2" />
+    <line x1="-26" y1="-23" x2="-17" y2="-8" stroke="#FFFFFF" stroke-width="1.2" />
+    <path d="M-37,-8 Q -26,-2 -15,-8 Z" fill="#FFFFFF" stroke="none" />
+
+    <!-- Right Balance Pan -->
+    <line x1="26" y1="-23" x2="17" y2="-8" stroke="#FFFFFF" stroke-width="1.2" />
+    <line x1="26" y1="-23" x2="35" y2="-8" stroke="#FFFFFF" stroke-width="1.2" />
+    <path d="M15,-8 Q 26,-2 37,-8 Z" fill="#FFFFFF" stroke="none" />
+
+    <!-- Center Pillar / Column -->
+    <line x1="0" y1="-24" x2="0" y2="18" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+    
+    <!-- Legal Book / Base Pedestal -->
+    <!-- Open Book Pages -->
+    <path d="M-18,12 Q -9,8 0,11 Q 9,8 18,12 L18,19 Q 9,15 0,18 Q -9,15 -18,19 Z" fill="#FFFFFF" stroke="none" />
+    <!-- Pedestal Base Steps -->
+    <rect x="-24" y="21" width="48" height="4.5" rx="1.5" fill="#FFFFFF" stroke="none" />
+    <rect x="-28" y="27" width="56" height="4.5" rx="1.5" fill="#FFFFFF" stroke="none" />
+  </g>
+</svg>

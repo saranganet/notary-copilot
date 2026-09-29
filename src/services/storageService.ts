@@ -1,32 +1,229 @@
-import type { NotarialAct, NotaryProfile } from '../types/notary';
+import type { NotarialAct, NotaryProfile, LegalDraft, NotaryAccount, AccessRequest } from '../types/notary';
 
 const STORAGE_KEYS = {
   ACTS: 'notary_acts_db_v3',
   PROFILE: 'notary_profile_v5',
   LANG: 'notary_lang_v1',
+  DRAFTS: 'notary_drafts_v1',
+  CURRENT_DRAFT: 'notary_current_draft_v1',
+  SESSION_USER: 'notary_active_session_v1',
+  CUSTOM_NOTARIES: 'notary_custom_profiles_v1',
+  ACCOUNTS: 'notary_accounts_v2',
+  ACCESS_REQUESTS: 'notary_access_requests_v2',
 };
 
-export const DEFAULT_NOTARY_PROFILE: NotaryProfile = {
-  firmName: 'Advocate Nileema Saranga',
-  notaryName: 'Adv. Nileema Saranga',
-  qualifications: 'B.A., LL.B., Advocate & Notary Public',
-  regNo: 'Reg. No. 15960 / Govt. of India',
-  areaOfPractice: 'Badlapur, Ulhasnagar, Kalyan & Thane District',
-  officeAddress: 'Shop no. 12, Opp. IDBI Bank, Gandhi Chowk, Badlapur East',
-  mobile: '+91 98220 12345',
-  email: 'adv.nileemasaranga@gmail.com',
-  verificationDomain: 'notary.saranga.in',
-  physicalStampingPreference: true,
-};
+export const PRESET_NOTARIES: NotaryProfile[] = [
+  {
+    firmName: 'Advocate Nileema Saranga & Chambers',
+    notaryName: 'Adv. Nileema Saranga',
+    qualifications: 'B.A., LL.B., Advocate & Notary Public',
+    regNo: 'Reg. No. 15960 / Govt. of India',
+    areaOfPractice: 'Badlapur, Ulhasnagar, Kalyan & Thane District',
+    officeAddress: 'Shop no. 12, Opp. IDBI Bank, Gandhi Chowk, Badlapur East, Thane 421503',
+    mobile: '+91 98220 12345',
+    email: 'adv.nileemasaranga@gmail.com',
+    verificationDomain: 'notary.saranga.in',
+    physicalStampingPreference: true,
+  },
+  {
+    firmName: 'Verma & Associates Legal Chamber',
+    notaryName: 'Adv. Rajesh K. Verma',
+    qualifications: 'B.Sc., LL.M., Notary Public',
+    regNo: 'Reg. No. 12480 / Govt. of India',
+    areaOfPractice: 'Patiala House Courts & New Delhi District',
+    officeAddress: 'Chamber 114, Lawyers Block, Patiala House Courts, New Delhi 110001',
+    mobile: '+91 98110 54321',
+    email: 'adv.rajeshverma@delhibar.org',
+    verificationDomain: 'verma-notary.gov.in',
+    physicalStampingPreference: true,
+  },
+  {
+    firmName: 'Kulkarni Notary Chambers',
+    notaryName: 'Adv. Anand R. Kulkarni',
+    qualifications: 'B.A., LL.B., Notary Public',
+    regNo: 'Reg. No. 18210 / Govt. of India',
+    areaOfPractice: 'Shivajinagar & Pune District',
+    officeAddress: 'Office 3, District Court Complex, Shivajinagar, Pune 411005',
+    mobile: '+91 94220 98765',
+    email: 'adv.anandkulkarni@punebar.in',
+    verificationDomain: 'kulkarni.notary.in',
+    physicalStampingPreference: true,
+  },
+];
+
+export const DEFAULT_ACCOUNTS: NotaryAccount[] = [
+  {
+    username: 'nileema',
+    password: 'notary123',
+    role: 'admin',
+    profile: PRESET_NOTARIES[0],
+    createdAt: '2026-01-01',
+  },
+  {
+    username: 'rajesh',
+    password: 'notary123',
+    role: 'notary',
+    profile: PRESET_NOTARIES[1],
+    createdAt: '2026-01-01',
+  },
+  {
+    username: 'anand',
+    password: 'notary123',
+    role: 'notary',
+    profile: PRESET_NOTARIES[2],
+    createdAt: '2026-01-01',
+  },
+  {
+    username: 'admin',
+    password: 'admin123',
+    role: 'admin',
+    profile: PRESET_NOTARIES[0],
+    createdAt: '2026-01-01',
+  },
+];
+
+export const DEFAULT_NOTARY_PROFILE: NotaryProfile = PRESET_NOTARIES[0];
 
 export class StorageService {
-  public static getLanguage(): 'en' | 'mr' {
-    return (localStorage.getItem(STORAGE_KEYS.LANG) as 'en' | 'mr') || 'en';
+  public static getLanguage(): 'en' | 'mr' | 'hi' {
+    return (localStorage.getItem(STORAGE_KEYS.LANG) as 'en' | 'mr' | 'hi') || 'en';
   }
 
-  public static setLanguage(lang: 'en' | 'mr'): void {
+  public static setLanguage(lang: 'en' | 'mr' | 'hi'): void {
     localStorage.setItem(STORAGE_KEYS.LANG, lang);
   }
+
+  /**
+   * User Authentication & Multi-Notary Session Management
+   */
+  public static getSessionUser(): NotaryProfile | null {
+    const raw = localStorage.getItem(STORAGE_KEYS.SESSION_USER);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  public static setSessionUser(profile: NotaryProfile): void {
+    localStorage.setItem(STORAGE_KEYS.SESSION_USER, JSON.stringify(profile));
+    this.saveProfile(profile);
+  }
+
+  public static clearSession(): void {
+    localStorage.removeItem(STORAGE_KEYS.SESSION_USER);
+  }
+
+  public static getAllNotaries(): NotaryProfile[] {
+    const accounts = this.getAccounts();
+    return accounts.map((acc) => acc.profile);
+  }
+
+  public static saveCustomNotary(profile: NotaryProfile): void {
+    const existing = this.getAllNotaries();
+    const updated = [profile, ...existing.filter((p) => p.regNo !== profile.regNo)];
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_NOTARIES, JSON.stringify(updated));
+    this.setSessionUser(profile);
+  }
+
+  /**
+   * Credential Authentication & Multi-Notary Account Management
+   */
+  public static getAccounts(): NotaryAccount[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(DEFAULT_ACCOUNTS));
+      return DEFAULT_ACCOUNTS;
+    }
+    try {
+      const stored: NotaryAccount[] = JSON.parse(raw);
+      // Ensure default accounts are present
+      const merged = [...stored];
+      DEFAULT_ACCOUNTS.forEach((d) => {
+        if (!merged.some((m) => m.username.toLowerCase() === d.username.toLowerCase())) {
+          merged.push(d);
+        }
+      });
+      return merged;
+    } catch {
+      return DEFAULT_ACCOUNTS;
+    }
+  }
+
+  public static saveAccount(account: NotaryAccount): void {
+    const accounts = this.getAccounts();
+    const filtered = accounts.filter(
+      (a) => a.username.toLowerCase() !== account.username.toLowerCase()
+    );
+    const updated = [account, ...filtered];
+    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(updated));
+  }
+
+  public static authenticate(username: string, password: string): NotaryAccount | null {
+    const trimmedUser = username.trim().toLowerCase();
+    const accounts = this.getAccounts();
+    const match = accounts.find(
+      (acc) => acc.username.toLowerCase() === trimmedUser && acc.password === password.trim()
+    );
+    if (match) {
+      this.setSessionUser(match.profile);
+      return match;
+    }
+    return null;
+  }
+
+  /**
+   * Access Requests for Notaries Interested in Portal Access
+   */
+  public static getAccessRequests(): AccessRequest[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACCESS_REQUESTS);
+    if (!raw) {
+      // Seed with one sample demo request so the owner can see how it works!
+      const initial: AccessRequest[] = [
+        {
+          id: 'REQ-DEMO-01',
+          applicantName: 'Adv. Suresh M. Patil',
+          regNo: 'MH/19842/2024',
+          mobile: '+91 98230 45678',
+          email: 'adv.spatil@gmail.com',
+          jurisdiction: 'Kalyan & Dombivli District Court',
+          status: 'pending',
+          requestedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+          notes: 'Interested in digital register and biometric attestation for daily notary work.',
+        },
+      ];
+      localStorage.setItem(STORAGE_KEYS.ACCESS_REQUESTS, JSON.stringify(initial));
+      return initial;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  public static createAccessRequest(
+    data: Omit<AccessRequest, 'id' | 'status' | 'requestedAt'>
+  ): AccessRequest {
+    const existing = this.getAccessRequests();
+    const newReq: AccessRequest = {
+      ...data,
+      id: `REQ-${Date.now().toString(36).toUpperCase()}`,
+      status: 'pending',
+      requestedAt: new Date().toISOString(),
+    };
+    const updated = [newReq, ...existing];
+    localStorage.setItem(STORAGE_KEYS.ACCESS_REQUESTS, JSON.stringify(updated));
+    return newReq;
+  }
+
+  public static updateAccessRequest(id: string, status: 'approved' | 'rejected'): void {
+    const existing = this.getAccessRequests();
+    const updated = existing.map((r) => (r.id === id ? { ...r, status } : r));
+    localStorage.setItem(STORAGE_KEYS.ACCESS_REQUESTS, JSON.stringify(updated));
+  }
+
 
   /**
    * Retrieves all recorded notarial acts
@@ -64,6 +261,54 @@ export class StorageService {
   public static deleteAct(id: string): void {
     const acts = this.getActs().filter((a) => a.id !== id);
     this.saveActs(acts);
+  }
+
+  /**
+   * Drafts management for Notary Document Editor
+   */
+  public static getDrafts(): LegalDraft[] {
+    const raw = localStorage.getItem(STORAGE_KEYS.DRAFTS);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+
+  public static saveDrafts(drafts: LegalDraft[]): void {
+    localStorage.setItem(STORAGE_KEYS.DRAFTS, JSON.stringify(drafts));
+  }
+
+  public static saveDraft(draft: LegalDraft): void {
+    const drafts = this.getDrafts();
+    const idx = drafts.findIndex((d) => d.id === draft.id);
+    if (idx >= 0) {
+      drafts[idx] = draft;
+    } else {
+      drafts.unshift(draft);
+    }
+    this.saveDrafts(drafts);
+    this.saveCurrentDraft(draft);
+  }
+
+  public static deleteDraft(id: string): void {
+    const drafts = this.getDrafts().filter((d) => d.id !== id);
+    this.saveDrafts(drafts);
+  }
+
+  public static getCurrentDraft(): LegalDraft | null {
+    const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_DRAFT);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  public static saveCurrentDraft(draft: LegalDraft): void {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_DRAFT, JSON.stringify(draft));
   }
 
   public static getActById(id: string): NotarialAct | undefined {

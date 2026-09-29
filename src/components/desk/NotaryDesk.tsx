@@ -45,7 +45,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
   const [date, setDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [docType, setDocType] = useState<DocumentType>('Rental Agreement');
   const [customTitle, setCustomTitle] = useState<string>(
-    lang === 'mr' ? 'निवासी भाडेकरार (११ महिने)' : 'Residential Tenancy Agreement (11 Months)'
+    lang === 'mr'
+      ? 'निवासी भाडेकरार (११ महिने)'
+      : lang === 'hi'
+      ? 'आवासीय किराया अनुबंध (११ माह)'
+      : 'Residential Tenancy Agreement (11 Months)'
   );
   const [stampValue, setStampValue] = useState<number>(100);
   const [feesCharged, setFeesCharged] = useState<number>(500);
@@ -57,7 +61,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
     setDate(new Date().toISOString().split('T')[0]);
     setDocType('Rental Agreement');
     setCustomTitle(
-      lang === 'mr' ? 'निवासी भाडेकरार (११ महिने)' : 'Residential Tenancy Agreement (11 Months)'
+      lang === 'mr'
+        ? 'निवासी भाडेकरार (११ महिने)'
+        : lang === 'hi'
+        ? 'आवासीय किराया अनुबंध (११ माह)'
+        : 'Residential Tenancy Agreement (11 Months)'
     );
     setStampValue(100);
     setFeesCharged(500);
@@ -157,7 +165,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
     setDocType(newType);
     if (newType === 'Rental Agreement') {
       setCustomTitle(
-        lang === 'mr' ? 'निवासी भाडेकरार (११ महिने)' : 'Residential Tenancy Agreement (11 Months)'
+        lang === 'mr'
+          ? 'निवासी भाडेकरार (११ महिने)'
+          : lang === 'hi'
+          ? 'आवासीय किराया अनुबंध (११ माह)'
+          : 'Residential Tenancy Agreement (11 Months)'
       );
       setStampValue(100);
       setFeesCharged(500);
@@ -303,17 +315,21 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
   const handleAutofillRentalDemo = () => {
     setDocType('Rental Agreement');
     setCustomTitle(
-      lang === 'mr' ? 'निवासी भाडेकरार (११ महिने)' : 'Residential Tenancy Agreement (11 Months)'
+      lang === 'mr'
+        ? 'निवासी भाडेकरार (११ महिने)'
+        : lang === 'hi'
+        ? 'आवासीय किराया अनुबंध (११ माह)'
+        : 'Residential Tenancy Agreement (11 Months)'
     );
     setParties([
       {
         id: 'p-demo-1',
         role: 'Owner',
-        name: lang === 'mr' ? 'राजेश अनंत पाटील' : 'Rajesh Anant Patil',
+        name: lang === 'mr' ? 'राजेश अनंत पाटील' : lang === 'hi' ? 'राजेश अनंत पाटिल' : 'Rajesh Anant Patil',
         relationType: 'S/o',
-        relativeName: lang === 'mr' ? 'अनंत पाटील' : 'Anant Patil',
+        relativeName: lang === 'mr' ? 'अनंत पाटील' : lang === 'hi' ? 'अनंत पाटिल' : 'Anant Patil',
         age: '46',
-        address: lang === 'mr' ? 'प्लॉट १२, सहकार नगर, पुणे ४११००९' : 'Plot 12, Sahakar Nagar, Pune 411009',
+        address: lang === 'mr' ? 'प्लॉट १२, सहकार नगर, पुणे ४११००९' : lang === 'hi' ? 'प्लॉट १२, सहकार नगर, पुणे ४११००९' : 'Plot 12, Sahakar Nagar, Pune 411009',
         idType: 'Aadhaar Card',
         idNumber: '984211223344',
         mobile: '9822101010',
@@ -325,11 +341,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
       {
         id: 'p-demo-2',
         role: 'Tenant',
-        name: lang === 'mr' ? 'संजय प्रकाश देशमुख' : 'Sanjay Prakash Deshmukh',
+        name: lang === 'mr' ? 'संजय प्रकाश देशमुख' : lang === 'hi' ? 'संजय प्रकाश देशमुख' : 'Sanjay Prakash Deshmukh',
         relationType: 'S/o',
-        relativeName: lang === 'mr' ? 'प्रकाश देशमुख' : 'Prakash Deshmukh',
+        relativeName: lang === 'mr' ? 'प्रकाश देशमुख' : lang === 'hi' ? 'प्रकाश देशमुख' : 'Prakash Deshmukh',
         age: '31',
-        address: lang === 'mr' ? 'फ्लॅट ३०२, साई रेसिडेन्सी, कोथरूड, पुणे ४११०३८' : 'Flat 302, Sai Residency, Kothrud, Pune 411038',
+        address: lang === 'mr' ? 'फ्लॅट ३०२, साई रेसिडेन्सी, कोथरूड, पुणे ४११०३८' : lang === 'hi' ? 'फ्लैट ३०२, साई रेसीडेंसी, कोथरुड, पुणे ४११०३८' : 'Flat 302, Sai Residency, Kothrud, Pune 411038',
         idType: 'PAN Card',
         idNumber: 'ABCDE1234F',
         mobile: '9823445566',
@@ -341,11 +357,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
       {
         id: 'p-demo-3',
         role: 'Witness',
-        name: lang === 'mr' ? 'अमित दत्तात्रय शिंदे' : 'Amit Dattatray Shinde',
+        name: lang === 'mr' ? 'अमित दत्तात्रय शिंदे' : lang === 'hi' ? 'अमित दत्तात्रेय शिंदे' : 'Amit Dattatray Shinde',
         relationType: 'S/o',
-        relativeName: lang === 'mr' ? 'दत्तात्रय शिंदे' : 'Dattatray Shinde',
+        relativeName: lang === 'mr' ? 'दत्तात्रय शिंदे' : lang === 'hi' ? 'दत्तात्रेय शिंदे' : 'Dattatray Shinde',
         age: '38',
-        address: lang === 'mr' ? 'शिवाजी नगर, पुणे ४११००५' : 'Shivaji Nagar, Pune 411005',
+        address: lang === 'mr' ? 'शिवाजी नगर, पुणे ४११००५' : lang === 'hi' ? 'शिवाजी नगर, पुणे ४११००५' : 'Shivaji Nagar, Pune 411005',
         idType: 'Aadhaar Card',
         idNumber: '776655443322',
         mobile: '9822778899',
@@ -364,6 +380,8 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
       (docType === 'Other Legal Document'
         ? lang === 'mr'
           ? 'इतर कायदेशीर दस्तऐवज'
+          : lang === 'hi'
+          ? 'अन्य विधिक दस्तावेज़'
           : 'Other Legal Document'
         : docType);
 
@@ -422,10 +440,10 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={handleResetToNewEntry}
-            title={lang === 'mr' ? 'नवीन कोरी नोंद सुरू करा' : 'Start a fresh blank entry'}
+            title={lang === 'mr' ? 'नवीन कोरी नोंद सुरू करा' : lang === 'hi' ? 'नई खाली प्रविष्टि शुरू करें' : 'Start a fresh blank entry'}
           >
             <RotateCcw size={15} />
-            {lang === 'mr' ? 'नवीन कोरी नोंद' : 'New Blank Entry'}
+            {lang === 'mr' ? 'नवीन कोरी नोंद' : lang === 'hi' ? 'नई खाली प्रविष्टि' : 'New Blank Entry'}
           </button>
           <button
             type="button"
@@ -485,14 +503,14 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                 border: '1px solid #94A3B8',
                 textAlign: 'center',
               }}
-              title={lang === 'mr' ? 'नोंदणी अनुक्रमांक (आपोआप वाढतो किंवा हस्ते बदलता येतो)' : 'Serial Number (Auto-increments, editable)'}
+              title={lang === 'mr' ? 'नोंदणी अनुक्रमांक (आपोआप वाढतो किंवा हस्ते बदलता येतो)' : lang === 'hi' ? 'पंजीकरण अनुक्रमांक (स्वचालित अथवा संपादन योग्य)' : 'Serial Number (Auto-increments, editable)'}
             />
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setSerialNo(StorageService.getNextSerialNo())}
               style={{ padding: '2px 6px', fontSize: '0.75rem', height: '26px' }}
-              title={lang === 'mr' ? 'पुढील अनुक्रमांक आपोआप आणा' : 'Auto-advance to next serial'}
+              title={lang === 'mr' ? 'पुढील अनुक्रमांक आपोआप आणा' : lang === 'hi' ? 'अगला अनुक्रमांक लाएं' : 'Auto-advance to next serial'}
             >
               <RefreshCw size={13} />
             </button>
@@ -507,18 +525,18 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
               value={docType}
               onChange={(e) => handleDocTypeChange(e.target.value as DocumentType)}
             >
-              <option value="Rental Agreement">{lang === 'mr' ? 'भाडेकरार (Tenancy)' : 'Rental Agreement (Tenancy)'}</option>
-              <option value="General Affidavit">{lang === 'mr' ? 'सामान्य शपथपत्र (General Affidavit)' : 'General Affidavit'}</option>
-              <option value="Name Change Affidavit">{lang === 'mr' ? 'नाव बदल शपथपत्र (Name Change)' : 'Name Change Affidavit'}</option>
-              <option value="Gap Certificate Affidavit">{lang === 'mr' ? 'शैक्षणिक गॅप शपथपत्र (Gap Certificate)' : 'Educational Gap Year Affidavit'}</option>
-              <option value="Address Proof Affidavit">{lang === 'mr' ? 'पत्ता पुरावा शपथपत्र' : 'Address Proof Affidavit'}</option>
-              <option value="Vehicle Sale Agreement">{lang === 'mr' ? 'वाहन खरेदी-विक्री करार / NOC' : 'Vehicle Sale Agreement / NOC'}</option>
-              <option value="Special Power of Attorney">{lang === 'mr' ? 'विशेष कुलमुखत्यारपत्र (SPA)' : 'Special Power of Attorney (SPA)'}</option>
-              <option value="General Power of Attorney">{lang === 'mr' ? 'कुलमुखत्यारपत्र (GPA)' : 'General Power of Attorney (GPA)'}</option>
-              <option value="Indemnity Bond">{lang === 'mr' ? 'नुकसान भरपाई बंधपत्र (Indemnity Bond)' : 'Indemnity Bond'}</option>
-              <option value="Declaration">{lang === 'mr' ? 'सत्यप्रतिज्ञापत्र / घोषणापत्र' : 'Solemn Declaration'}</option>
-              <option value="True Copy Attestation">{lang === 'mr' ? 'खऱ्या प्रतीचे साक्षांकन (True Copy)' : 'True Copy Document Attestation'}</option>
-              <option value="Other Legal Document">{lang === 'mr' ? 'इतर कायदेशीर दस्तऐवज (Other Document)' : 'Other Legal Document'}</option>
+              <option value="Rental Agreement">{lang === 'mr' ? 'भाडेकरार (Tenancy)' : lang === 'hi' ? 'किराया अनुबंध (Tenancy)' : 'Rental Agreement (Tenancy)'}</option>
+              <option value="General Affidavit">{lang === 'mr' ? 'सामान्य शपथपत्र (General Affidavit)' : lang === 'hi' ? 'सामान्य शपथ पत्र (General Affidavit)' : 'General Affidavit'}</option>
+              <option value="Name Change Affidavit">{lang === 'mr' ? 'नाव बदल शपथपत्र (Name Change)' : lang === 'hi' ? 'नाम परिवर्तन शपथ पत्र (Name Change)' : 'Name Change Affidavit'}</option>
+              <option value="Gap Certificate Affidavit">{lang === 'mr' ? 'शैक्षणिक गॅप शपथपत्र (Gap Certificate)' : lang === 'hi' ? 'शैक्षणिक अंतराल शपथ पत्र (Gap Certificate)' : 'Educational Gap Year Affidavit'}</option>
+              <option value="Address Proof Affidavit">{lang === 'mr' ? 'पत्ता पुरावा शपथपत्र' : lang === 'hi' ? 'निवास प्रमाण शपथ पत्र' : 'Address Proof Affidavit'}</option>
+              <option value="Vehicle Sale Agreement">{lang === 'mr' ? 'वाहन खरेदी-विक्री करार / NOC' : lang === 'hi' ? 'वाहन क्रय-विक्रय अनुबंध / NOC' : 'Vehicle Sale Agreement / NOC'}</option>
+              <option value="Special Power of Attorney">{lang === 'mr' ? 'विशेष कुलमुखत्यारपत्र (SPA)' : lang === 'hi' ? 'विशेष मुख्तारनामा (SPA)' : 'Special Power of Attorney (SPA)'}</option>
+              <option value="General Power of Attorney">{lang === 'mr' ? 'कुलमुखत्यारपत्र (GPA)' : lang === 'hi' ? 'सामान्य मुख्तारनामा (GPA)' : 'General Power of Attorney (GPA)'}</option>
+              <option value="Indemnity Bond">{lang === 'mr' ? 'नुकसान भरपाई बंधपत्र (Indemnity Bond)' : lang === 'hi' ? 'क्षतिपूर्ति बंधपत्र (Indemnity Bond)' : 'Indemnity Bond'}</option>
+              <option value="Declaration">{lang === 'mr' ? 'सत्यप्रतिज्ञापत्र / घोषणापत्र' : lang === 'hi' ? 'सत्यनिष्ठा घोषणापत्र' : 'Solemn Declaration'}</option>
+              <option value="True Copy Attestation">{lang === 'mr' ? 'खऱ्या प्रतीचे साक्षांकन (True Copy)' : lang === 'hi' ? 'सत्य प्रतिलिपि अनुप्रमाणन (True Copy)' : 'True Copy Document Attestation'}</option>
+              <option value="Other Legal Document">{lang === 'mr' ? 'इतर कायदेशीर दस्तऐवज (Other Document)' : lang === 'hi' ? 'अन्य विधिक दस्तावेज़ (Other Document)' : 'Other Legal Document'}</option>
             </select>
           </div>
 
@@ -536,7 +554,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                     fontWeight: 700,
                   }}
                 >
-                  {lang === 'mr' ? 'प्रमाणपत्रावर छापले जाईल' : 'Will appear on Certificate'}
+                  {lang === 'mr' ? 'प्रमाणपत्रावर छापले जाईल' : lang === 'hi' ? 'प्रमाणपत्र पर मुद्रित होगा' : 'Will appear on Certificate'}
                 </span>
               )}
             </label>
@@ -547,8 +565,8 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder={
                 docType === 'Other Legal Document'
-                  ? (lang === 'mr' ? 'उदा. बक्षीसपत्र (Gift Deed), खरेदीखत (Sale Deed), मृत्यूपत्र (Will)' : 'e.g. Gift Deed, Sale Deed, Will, Partnership Deed')
-                  : 'e.g. Residential Tenancy Agreement'
+                  ? (lang === 'mr' ? 'उदा. बक्षीसपत्र (Gift Deed), खरेदीखत (Sale Deed), मृत्यूपत्र (Will)' : lang === 'hi' ? 'उदा. दानपत्र (Gift Deed), विक्रय विलेख (Sale Deed), वसीयत (Will)' : 'e.g. Gift Deed, Sale Deed, Will, Partnership Deed')
+                  : (lang === 'mr' ? 'उदा. निवासी भाडेकरार' : lang === 'hi' ? 'उदा. आवासीय किराया अनुबंध' : 'e.g. Residential Tenancy Agreement')
               }
               style={
                 docType === 'Other Legal Document'
@@ -595,7 +613,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
 
           <div className="form-group">
             <label className="form-label">
-              {lang === 'mr' ? 'वही क्र. (Book No.)' : 'Book No.'}
+              {lang === 'mr' ? 'वही क्र. (Book No.)' : lang === 'hi' ? 'बही सं. (Book No.)' : 'Book No.'}
             </label>
             <input
               type="number"
@@ -609,7 +627,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
 
           <div className="form-group">
             <label className="form-label">
-              {lang === 'mr' ? 'पान क्र. (Page No.)' : 'Page No.'}
+              {lang === 'mr' ? 'पान क्र. (Page No.)' : lang === 'hi' ? 'पृष्ठ सं. (Page No.)' : 'Page No.'}
             </label>
             <input
               type="number"
@@ -702,7 +720,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                     className="form-input"
                     value={party.name}
                     onChange={(e) => handlePartyChange(party.id, 'name', e.target.value)}
-                    placeholder={lang === 'mr' ? 'उदा. राजेश अनंत पाटील' : 'e.g. Rajesh Anant Patil'}
+                    placeholder={lang === 'mr' ? 'उदा. राजेश अनंत पाटील' : lang === 'hi' ? 'उदा. राजेश अनंत पाटिल' : 'e.g. Rajesh Anant Patil'}
                     required
                   />
                 </div>
@@ -726,7 +744,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                       className="form-input"
                       value={party.relativeName}
                       onChange={(e) => handlePartyChange(party.id, 'relativeName', e.target.value)}
-                      placeholder={lang === 'mr' ? 'उदा. अनंत पाटील' : 'e.g. Anant Patil'}
+                      placeholder={lang === 'mr' ? 'उदा. अनंत पाटील' : lang === 'hi' ? 'उदा. अनंत पाटिल' : 'e.g. Anant Patil'}
                     />
                   </div>
                 </div>
@@ -774,7 +792,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                     className="form-input"
                     value={party.address}
                     onChange={(e) => handlePartyChange(party.id, 'address', e.target.value)}
-                    placeholder={lang === 'mr' ? 'उदा. प्लॉट १२, सहकार नगर, पुणे ४११००९' : 'e.g. Plot 12, Sahakar Nagar, Pune 411009'}
+                    placeholder={lang === 'mr' ? 'उदा. प्लॉट १२, सहकार नगर, पुणे ४११००९' : lang === 'hi' ? 'उदा. प्लॉट १२, सहकार नगर, पुणे ४११००९' : 'e.g. Plot 12, Sahakar Nagar, Pune 411009'}
                   />
                 </div>
               </div>
@@ -885,10 +903,10 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
       >
         <div>
           <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-            {lang === 'mr' ? 'नॉटरी प्रमाणपत्र तयार करण्यास तयार आहात का?' : 'Ready to finalize this Notarial Act?'}
+            {lang === 'mr' ? 'नॉटरी प्रमाणपत्र तयार करण्यास तयार आहात का?' : lang === 'hi' ? 'क्या आप नोटरी प्रमाणपत्र तैयार करने हेतु तैयार हैं?' : 'Ready to finalize this Notarial Act?'}
           </div>
           <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-            {lang === 'mr' ? 'प्रमाणपत्र तयार होईल व नमुना १५ नोंदवहीत नोंद आपोआप होईल.' : 'Will generate the official certificate and automatically record in Form XV register.'}
+            {lang === 'mr' ? 'प्रमाणपत्र तयार होईल व नमुना १५ नोंदवहीत नोंद आपोआप होईल.' : lang === 'hi' ? 'प्रमाणपत्र तैयार होगा व प्रारूप १५ रजिस्टर में स्वतः दर्ज होगा।' : 'Will generate the official certificate and automatically record in Form XV register.'}
           </div>
         </div>
 

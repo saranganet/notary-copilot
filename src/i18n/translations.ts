@@ -1,4 +1,4 @@
-export type Language = 'en' | 'mr';
+export type Language = 'en' | 'mr' | 'hi';
 
 export interface Translations {
   // Brand & Header
@@ -99,12 +99,38 @@ export interface Translations {
   regExportCsvBtn: string;
   regPrintRegisterBtn: string;
 
-  // Roles
+    // Roles
   roleOwner: string;
   roleTenant: string;
   roleDeponent: string;
   roleWitness: string;
   roleExecutant: string;
+
+  // Login & Credential Authorization
+  loginHeading: string;
+  loginSubheading: string;
+  loginPortalBadge: string;
+  loginCredentialsTab: string;
+  loginRequestTab: string;
+  loginUsernameLabel: string;
+  loginPasswordLabel: string;
+  loginEnterPortalBtn: string;
+  loginInvalidCredentialsError: string;
+  loginRequestHeading: string;
+  loginRequestDesc: string;
+  loginRequestNameLabel: string;
+  loginRequestRegNoLabel: string;
+  loginRequestMobileLabel: string;
+  loginRequestEmailLabel: string;
+  loginRequestJurisdictionLabel: string;
+  loginRequestNotesLabel: string;
+  loginRequestSubmitBtn: string;
+  loginRequestSuccessTitle: string;
+  loginRequestSuccessDesc: string;
+  loginRequestWhatsAppBtn: string;
+  loginDemoCredentialsLabel: string;
+  logoutBtn: string;
+  switchNotaryBtn: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
@@ -116,7 +142,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     tabDesk: 'New Notary Entry',
     tabCertificate: 'Certificate Preview',
     tabRegister: 'Form XV Register',
-    tabDrafter: 'Affidavit Drafter',
+    tabDrafter: 'Document Editor & Drafter',
     tabVerify: 'Verify QR',
     tabSettings: 'Profile & Settings',
     secugenOnline: 'SecuGen Online',
@@ -206,6 +232,31 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     roleDeponent: 'Deponent',
     roleWitness: 'Witness',
     roleExecutant: 'Executant',
+
+    loginHeading: 'Digital Notary Copilot',
+    loginSubheading: 'Official Notarial Workstation & Biometric Form XV Portal',
+    loginPortalBadge: 'Notaries Act, 1952 • Govt. of India',
+    loginCredentialsTab: 'Authorized Sign-In',
+    loginRequestTab: 'Interested? Request Access',
+    loginUsernameLabel: 'Username / ID',
+    loginPasswordLabel: 'Password',
+    loginEnterPortalBtn: 'Sign In & Open Portal',
+    loginInvalidCredentialsError: 'Invalid username or password. Please verify credentials or contact administrator.',
+    loginRequestHeading: 'Request Official Workstation Access',
+    loginRequestDesc: 'If you are an Advocate or Notary Public interested in this workstation, submit your details to receive your authorized login credentials from the administrator.',
+    loginRequestNameLabel: 'Advocate Full Name',
+    loginRequestRegNoLabel: 'Notary / Bar Registration No.',
+    loginRequestMobileLabel: 'WhatsApp / Mobile Number',
+    loginRequestEmailLabel: 'Official Email ID',
+    loginRequestJurisdictionLabel: 'Court / District Jurisdiction',
+    loginRequestNotesLabel: 'Requirement / Notes (Optional)',
+    loginRequestSubmitBtn: 'Submit Access Request',
+    loginRequestSuccessTitle: 'Request Sent to Administrator!',
+    loginRequestSuccessDesc: 'Your request has been received. The administrator will verify your credentials and issue your official username and password via WhatsApp or email.',
+    loginRequestWhatsAppBtn: 'Contact Administrator on WhatsApp for Instant Access',
+    loginDemoCredentialsLabel: 'Available Demo Credentials (Click to Autofill)',
+    logoutBtn: 'Logout',
+    switchNotaryBtn: 'Switch Notary',
   },
   mr: {
     brandTitle: 'डिजिटल नॉटरी डेस्क',
@@ -215,7 +266,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     tabDesk: 'नवीन नॉटरी नोंद',
     tabCertificate: 'प्रमाणपत्र पूर्वदृश्य',
     tabRegister: 'नमुना १५ नोंदवही',
-    tabDrafter: 'शपथपत्र ड्राफ्टर',
+    tabDrafter: 'दस्तऐवज संपादक व मसुदा',
     tabVerify: 'क्यूआर पडताळणी',
     tabSettings: 'माहिती व सेटिंग्ज',
     secugenOnline: 'SecuGen चालू आहे',
@@ -305,5 +356,154 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     roleDeponent: 'शपथकर्ता',
     roleWitness: 'साक्षीदार',
     roleExecutant: 'निष्पादक',
+
+    loginHeading: 'डिजिटल नॉटरी कोपायलट',
+    loginSubheading: 'अधिकृत नॉटरी कार्यप्रणाली व बायोमेट्रिक नमुना १५ नोंदवही पोर्टल',
+    loginPortalBadge: 'नॉटरी कायदा, १९५२ • भारत सरकार',
+    loginCredentialsTab: 'अधिकृत लॉगिन',
+    loginRequestTab: 'इच्छुक आहात? प्रवेश विनंती करा',
+    loginUsernameLabel: 'युझरनेम / आयडी',
+    loginPasswordLabel: 'पासवर्ड',
+    loginEnterPortalBtn: 'लॉगिन करा व पोर्टल उघडा',
+    loginInvalidCredentialsError: 'अवैध युझरनेम किंवा पासवर्ड. कृपया माहिती तपासा किंवा प्रशासकाशी संपर्क साधा.',
+    loginRequestHeading: 'कार्यप्रणाली प्रवेशासाठी अधिकृत विनंती',
+    loginRequestDesc: 'जर आपण वकील किंवा नॉटरी पब्लिक असाल आणि हे पोर्टल वापरू इच्छित असाल, तर प्रशासकाकडून युझरनेम व पासवर्ड मिळवण्यासाठी आपले तपशील खाली भरा.',
+    loginRequestNameLabel: 'वकिलांचे पूर्ण नाव',
+    loginRequestRegNoLabel: 'नॉटरी / बार नोंदणी क्रमांक',
+    loginRequestMobileLabel: 'व्हॉट्सअ‍ॅप / मोबाईल नंबर',
+    loginRequestEmailLabel: 'अधिकृत ईमेल आयडी',
+    loginRequestJurisdictionLabel: 'न्यायालय / जिल्हा अधिकारक्षेत्र',
+    loginRequestNotesLabel: 'गरज / टिपणी (पर्यायी)',
+    loginRequestSubmitBtn: 'प्रवेश विनंती पाठवा',
+    loginRequestSuccessTitle: 'प्रशासकाकडे विनंती यशस्वीरित्या पाठवली!',
+    loginRequestSuccessDesc: 'आपली विनंती प्राप्त झाली आहे. प्रशासक आपल्या माहितीची पडताळणी करून व्हॉट्सअ‍ॅप किंवा ईमेलद्वारे अधिकृत युझरनेम व पासवर्ड पाठवतील.',
+    loginRequestWhatsAppBtn: 'तातडीच्या लॉगिनसाठी प्रशासकाशी व्हॉट्सअ‍ॅपवर संपर्क साधा',
+    loginDemoCredentialsLabel: 'उपलब्ध डेमो खाती (ऑटोफिलसाठी क्लिक करा)',
+    logoutBtn: 'लॉग आऊट',
+    switchNotaryBtn: 'नॉटरी बदला',
+  },
+  hi: {
+    brandTitle: 'डिजिटल नोटरी डेस्क',
+    brandSubtitle: 'एडवोकेट नीलिमा सारंगा • पंजीकरण संख्या १५९६० / भारत सरकार',
+    actTag: 'अधिनियम १९५२',
+
+    tabDesk: 'नई नोटरी प्रविष्टि',
+    tabCertificate: 'प्रमाणपत्र पूर्वावलोकन',
+    tabRegister: 'प्रारूप १५ रजिस्टर',
+    tabDrafter: 'दस्तावेज़ संपादक व मसौदा',
+    tabVerify: 'क्यूआर सत्यापन',
+    tabSettings: 'प्रोफ़ाइल व सेटिंग्स',
+    secugenOnline: 'SecuGen चालू है',
+    secugenSim: 'सिम्युलेटर मोड',
+    webcamReady: 'वेबकैम तैयार',
+
+    deskTitle: 'एडवोकेट नीलिमा सारंगा - नोटरी डेस्क',
+    deskSubtitle: 'चरण १: विवरण भरें → चरण २: फ़ोटो व SecuGen अंगूठे का निशान लें → चरण ३: प्रमाणपत्र प्रिंट करें और प्रारूप १५ में दर्ज करें',
+    fillDemoBtn: 'नमूना प्रविष्टि भरें',
+    generatePrintBtn: 'प्रमाणपत्र तैयार व प्रिंट करें (A4)',
+    docDetailsTitle: '१. दस्तावेज़ की प्रकृति व आधिकारिक पंजीकरण विवरण',
+    docDetailsSubtitle: 'प्रारूप १५ रजिस्टर के लिए स्वचालित रूप से आवंटित अनुक्रमांक',
+    serialNoLabel: 'पंजीकरण अनुक्रमांक',
+    docTypeLabel: 'विधिक दस्तावेज़ का प्रकार',
+    docTitleLabel: 'दस्तावेज़ का शीर्षक (प्रमाणपत्र पर मुद्रित होगा)',
+    executionDateLabel: 'निष्पादन तिथि',
+    feeChargedLabel: 'नोटरी शुल्क (₹) [केवल आंतरिक रजिस्टर के लिए]',
+    stampValueLabel: 'स्टाम्प पेपर मूल्य (₹)',
+
+    partiesTitle: '२. निष्पादक पक्षकार व बायोमेट्रिक कैप्चर',
+    partiesSubtitle: 'प्रत्येक पक्षकार का लाइव वेबकैम फ़ोटो, SecuGen फिंगरप्रिंट और हस्ताक्षर लें',
+    addWitnessBtn: 'गवाह जोड़ें',
+    addExecutantBtn: 'निष्पादक जोड़ें',
+    readyForCert: 'प्रमाणपत्र हेतु तैयार',
+    fullNameLabel: 'पूरा नाम',
+    relationLabel: 'संबन्ध व पिता/पति का नाम',
+    idProofLabel: 'पहचान प्रमाण (आधार/पैन/आदि)',
+    mobileLabel: 'मोबाइल नंबर',
+    addressLabel: 'स्थायी निवास का पता',
+    takePhotoBtn: 'फ़ोटो लें',
+    scanThumbBtn: 'अंगूठा स्कैन करें',
+    paperSignBtn: 'कागज़ पर हस्ताक्षर',
+    physicalInkNote: 'स्याही द्वारा हस्ताक्षर',
+    photoCaptured: 'फ़ोटो ली गई ✓',
+    thumbCaptured: 'अंगूठा स्कैन हुआ ✓',
+    paperSignSelected: 'कागज़ पर भौतिक हस्ताक्षर',
+
+    certDocTitle: 'नोटरी प्रमाणपत्र',
+    certRegSerialNo: 'पंजीकरण अनुक्रमांक',
+    certTypeOfDoc: 'दस्तावेज़ का प्रकार',
+    certRegisteredOn: 'पंजीकरण तिथि',
+    certExecutingParties: 'निष्पादक पक्षकार',
+    certSignedPresenceWitness: 'गवाह की उपस्थिति में हस्ताक्षरित',
+    certPartyInfo: 'पक्षकार विवरण',
+    certDigitalPhoto: 'डिजिटल फ़ोटो',
+    certThumbImpression: 'अंगूठे का निशान',
+    certSignature: 'हस्ताक्षर',
+    certSignedBeforeMe: 'मेरे समक्ष हस्ताक्षरित किया',
+    certAttestationTitle: 'नोटरी अधिनियम, १९५२ के अंतर्गत वैधानिक अनुप्रमाणन',
+    certAttestationJurat: 'मेरे समक्ष व्यक्तिगत रूप से उपस्थित होकर, बायोमेट्रिक अंगूठे के निशान और फ़ोटो द्वारा पहचान सत्यापित कराकर, स्वेच्छा से हस्ताक्षर किए एवं शपथपूर्वक सत्यकथन किया।',
+    certAffixStampHere: 'नोटरी की आधिकारिक मोहर यहाँ लगाएं',
+    certScanToVerify: 'सत्यापन हेतु क्यूआर स्कैन करें',
+    certWatermark: 'वॉटरमार्क',
+    certPreviewCopy: 'नमूना प्रति',
+    certOfficialCopy: 'आधिकारिक प्रति',
+    certNone: 'कोई नहीं',
+    certPrintBtn: 'प्रमाणपत्र प्रिंट करें (A4)',
+    certBackBtn: 'वापस जाएं',
+    certBookNo: 'बही सं.',
+    certPageNo: 'पृष्ठ सं.',
+
+    registerTitle: 'प्रारूप १५ आधिकारिक नोटरी रजिस्टर',
+    registerSubtitle: 'नोटरी नियम १९५६ के नियम ११(९) के अंतर्गत संधारित वैधानिक रजिस्टर',
+    regTotalActs: 'कुल पंजीकृत दस्तावेज़',
+    regTotalFees: 'कुल जमा शुल्क',
+    regTenancyDocs: 'किराया अनुबंध',
+    regAffidavits: 'शपथ पत्र (Affidavits)',
+    regSearchPlaceholder: 'अनुक्रमांक (उदा. NS-2026-0018), नाम, मोबाइल या पते से खोजें...',
+    regAllFilter: 'सभी दस्तावेज़',
+    regTenancyFilter: 'किराया अनुबंध',
+    regAffidavitFilter: 'शपथ पत्र',
+    regColSNo: 'क्र.सं.',
+    regColDate: 'तिथि',
+    regColExecutant: 'निष्पादक पक्षकार का नाम',
+    regColAddress: 'पता व संपर्क',
+    regColWitness: 'पहचानकर्ता गवाह',
+    regColNature: 'दस्तावेज़ की प्रकृति',
+    regColFee: 'शुल्क (₹)',
+    regColBiometrics: 'बायोमेट्रिक्स',
+    regColActions: 'कार्रवाई',
+    regViewBtn: 'देखें',
+    regExportCsvBtn: 'एक्सेल / सीएसवी डाउनलोड',
+    regPrintRegisterBtn: 'रजिस्टर प्रिंट करें',
+
+    roleOwner: 'मकान मालिक',
+    roleTenant: 'किरायेदार',
+    roleDeponent: 'शपथकर्ता',
+    roleWitness: 'गवाह',
+    roleExecutant: 'निष्पादक',
+
+    loginHeading: 'डिजिटल नोटरी कोपायलट',
+    loginSubheading: 'आधिकारिक नोटरी कार्यस्थल व बायोमेट्रिक प्रारूप १५ रजिस्टर पोर्टल',
+    loginPortalBadge: 'नोटरी अधिनियम, १९५२ • भारत सरकार',
+    loginCredentialsTab: 'अधिकृत लॉगिन',
+    loginRequestTab: 'इच्छुक हैं? प्रवेश अनुरोध भेजें',
+    loginUsernameLabel: 'यूज़रनेम / आईडी',
+    loginPasswordLabel: 'पासवर्ड',
+    loginEnterPortalBtn: 'लॉगिन करें व पोर्टल खोलें',
+    loginInvalidCredentialsError: 'अमान्य यूज़रनेम या पासवर्ड। कृपया विवरण जांचें या व्यवस्थापक से संपर्क करें।',
+    loginRequestHeading: 'कार्यस्थल उपयोग हेतु आधिकारिक अनुरोध',
+    loginRequestDesc: 'यदि आप एक अधिवक्ता या नोटरी पब्लिक हैं और इस पोर्टल का उपयोग करना चाहते हैं, तो व्यवस्थापक से यूज़रनेम और पासवर्ड प्राप्त करने के लिए नीचे अपना विवरण भरें।',
+    loginRequestNameLabel: 'अधिवक्ता का पूरा नाम',
+    loginRequestRegNoLabel: 'नोटरी / बार पंजीकरण संख्या',
+    loginRequestMobileLabel: 'व्हाट्सएप / मोबाइल नंबर',
+    loginRequestEmailLabel: 'आधिकारिक ईमेल आईडी',
+    loginRequestJurisdictionLabel: 'न्यायालय / ज़िला अधिकार क्षेत्र',
+    loginRequestNotesLabel: 'आवश्यकता / टिप्पणी (वैकल्पिक)',
+    loginRequestSubmitBtn: 'प्रवेश अनुरोध भेजें',
+    loginRequestSuccessTitle: 'व्यवस्थापक को अनुरोध सफलतापूर्वक भेजा गया!',
+    loginRequestSuccessDesc: 'आपका अनुरोध प्राप्त हो गया है। व्यवस्थापक सत्यापन के बाद व्हाट्सएप या ईमेल द्वारा आधिकारिक यूज़रनेम और पासवर्ड उपलब्ध कराएंगे।',
+    loginRequestWhatsAppBtn: 'त्वरित क्रेडेंशियल्स के लिए व्हाट्सएप पर व्यवस्थापक से संपर्क करें',
+    loginDemoCredentialsLabel: 'उपलब्ध डेमो खाते (ऑटोफ़िल के लिए क्लिक करें)',
+    logoutBtn: 'लॉग आउट',
+    switchNotaryBtn: 'नोटरी बदलें',
   },
 };

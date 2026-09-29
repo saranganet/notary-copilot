@@ -3,6 +3,7 @@ import type { NotarialAct, NotaryProfile } from '../../types/notary';
 import { StorageService } from '../../services/storageService';
 import { Printer, ArrowLeft, Globe, BookOpen } from 'lucide-react';
 import { TRANSLATIONS, type Language } from '../../i18n/translations';
+import { NotaryLogo } from '../common/NotaryLogo';
 
 interface NotaryCertificateProps {
   act: NotarialAct;
@@ -74,6 +75,13 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
       if (role === 'Witness') return 'साक्षीदार (Witness)';
       return `${role} (पक्षकार)`;
     }
+    if (lang === 'hi') {
+      if (role === 'Owner') return 'मकान मालिक / प्रथम पक्षकार (Owner)';
+      if (role === 'Tenant') return 'किरायेदार / द्वितीय पक्षकार (Tenant)';
+      if (role === 'Deponent') return 'शपथकर्ता (Deponent)';
+      if (role === 'Witness') return 'गवाह (Witness)';
+      return `${role} (पक्षकार)`;
+    }
     return role;
   };
 
@@ -129,7 +137,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
           >
             <BookOpen size={14} color="#38BDF8" />
             <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span>{lang === 'mr' ? 'वही क्र.:' : 'Book No:'}</span>
+              <span>{lang === 'mr' ? 'वही क्र.:' : lang === 'hi' ? 'बही सं.:' : 'Book No:'}</span>
               <input
                 type="number"
                 value={bookNo}
@@ -149,7 +157,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
             </label>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
-              <span>{lang === 'mr' ? 'पान क्र.:' : 'Page No:'}</span>
+              <span>{lang === 'mr' ? 'पान क्र.:' : lang === 'hi' ? 'पृष्ठ सं.:' : 'Page No:'}</span>
               <input
                 type="number"
                 value={pageNo}
@@ -175,9 +183,10 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               className="btn btn-secondary btn-sm"
               onClick={onToggleLang}
               style={{ fontWeight: 700 }}
+              title="Toggle Language (English / मराठी / हिंदी)"
             >
               <Globe size={15} />
-              {lang === 'en' ? 'मराठी' : 'English'}
+              {lang === 'en' ? 'मराठी' : lang === 'mr' ? 'हिंदी' : 'English'}
             </button>
           )}
 
@@ -194,8 +203,11 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
           <div>
             {/* Header (Official header for Adv. Nileema Saranga with Badlapur address) */}
             <div className="cert-header">
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+                <NotaryLogo size={50} showShadow={false} />
+              </div>
               <div className="cert-firm-name">
-                {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : profile.firmName}
+                {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : lang === 'hi' ? 'एड. नीलिमा सारंगा' : profile.firmName}
               </div>
               <div
                 style={{
@@ -208,10 +220,12 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               >
                 {lang === 'mr'
                   ? 'वकील आणि अधिकृत नॉटरी (भारत सरकार)'
+                  : lang === 'hi'
+                  ? 'अधिवक्ता एवं आधिकारिक नोटरी (भारत सरकार)'
                   : `${profile.qualifications} (${profile.regNo})`}
               </div>
               <div className="cert-doc-title">
-                {lang === 'mr' ? 'नॉटरी प्रमाणपत्र' : 'Notary Certificate'}
+                {lang === 'mr' ? 'नॉटरी प्रमाणपत्र' : lang === 'hi' ? 'नोटरी प्रमाणपत्र' : 'Notary Certificate'}
               </div>
               {(act.customDocumentTitle || act.documentType) && (
                 <div
@@ -273,7 +287,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                       <td className="cert-col-details">
                         <div style={{ lineHeight: '1.45' }}>
                           <p>
-                            <strong>{lang === 'mr' ? 'नाव :' : 'Name :'}</strong> {party.name}
+                            <strong>{lang === 'mr' ? 'नाव :' : lang === 'hi' ? 'नाम :' : 'Name :'}</strong> {party.name}
                           </p>
                           {party.relativeName && (
                             <p>
@@ -281,14 +295,14 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                             </p>
                           )}
                           <p>
-                            <strong>{lang === 'mr' ? 'पत्ता :' : 'Address :'}</strong> {party.address}
+                            <strong>{lang === 'mr' ? 'पत्ता :' : lang === 'hi' ? 'पता :' : 'Address :'}</strong> {party.address}
                           </p>
                           <p>
-                            <strong>{lang === 'mr' ? 'ओळख पुरावा :' : 'Identification :'}</strong>{' '}
+                            <strong>{lang === 'mr' ? 'ओळख पुरावा :' : lang === 'hi' ? 'पहचान प्रमाण :' : 'Identification :'}</strong>{' '}
                             {party.idNumber} ({party.idType})
                           </p>
                           <p>
-                            <strong>{lang === 'mr' ? 'मोबाईल :' : 'Mobile :'}</strong> {party.mobile}
+                            <strong>{lang === 'mr' ? 'मोबाईल :' : lang === 'hi' ? 'मोबाइल :' : 'Mobile :'}</strong> {party.mobile}
                           </p>
                         </div>
                       </td>
@@ -300,7 +314,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                             <img src={party.photoUrl} alt={`${party.name} Photo`} />
                           ) : (
                             <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                              {lang === 'mr' ? 'फोटो नाही' : 'No Photo'}
+                              {lang === 'mr' ? 'फोटो नाही' : lang === 'hi' ? 'फ़ोटो नहीं' : 'No Photo'}
                             </span>
                           )}
                         </div>
@@ -316,7 +330,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                             />
                           ) : (
                             <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                              {lang === 'mr' ? 'ठसा नाही' : 'No Scan'}
+                              {lang === 'mr' ? 'ठसा नाही' : lang === 'hi' ? 'निशान नहीं' : 'No Scan'}
                             </span>
                           )}
                         </div>
@@ -375,7 +389,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                         <td className="cert-col-details">
                           <div style={{ lineHeight: '1.45' }}>
                             <p>
-                              <strong>{lang === 'mr' ? 'नाव :' : 'Name :'}</strong> {witness.name}
+                              <strong>{lang === 'mr' ? 'नाव :' : lang === 'hi' ? 'नाम :' : 'Name :'}</strong> {witness.name}
                             </p>
                             {witness.relativeName && (
                               <p>
@@ -383,14 +397,14 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                               </p>
                             )}
                             <p>
-                              <strong>{lang === 'mr' ? 'पत्ता :' : 'Address :'}</strong> {witness.address}
+                              <strong>{lang === 'mr' ? 'पत्ता :' : lang === 'hi' ? 'पता :' : 'Address :'}</strong> {witness.address}
                             </p>
                             <p>
-                              <strong>{lang === 'mr' ? 'ओळख पुरावा :' : 'Identification :'}</strong>{' '}
+                              <strong>{lang === 'mr' ? 'ओळख पुरावा :' : lang === 'hi' ? 'पहचान प्रमाण :' : 'Identification :'}</strong>{' '}
                               {witness.idNumber} ({witness.idType})
                             </p>
                             <p>
-                              <strong>{lang === 'mr' ? 'मोबाईल :' : 'Mobile :'}</strong> {witness.mobile}
+                              <strong>{lang === 'mr' ? 'मोबाईल :' : lang === 'hi' ? 'मोबाइल :' : 'Mobile :'}</strong> {witness.mobile}
                             </p>
                           </div>
                         </td>
@@ -401,7 +415,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                               <img src={witness.photoUrl} alt={`${witness.name} Photo`} />
                             ) : (
                               <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                                {lang === 'mr' ? 'फोटो नाही' : 'No Photo'}
+                                {lang === 'mr' ? 'फोटो नाही' : lang === 'hi' ? 'फ़ोटो नहीं' : 'No Photo'}
                               </span>
                             )}
                           </div>
@@ -416,7 +430,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                               />
                             ) : (
                               <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                                {lang === 'mr' ? 'ठसा नाही' : 'No Scan'}
+                                {lang === 'mr' ? 'ठसा नाही' : lang === 'hi' ? 'निशान नहीं' : 'No Scan'}
                               </span>
                             )}
                           </div>
@@ -463,6 +477,8 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               <p>
                 {lang === 'mr'
                   ? `माझ्यासमक्ष प्रत्यक्ष हजर राहून, बायोमेट्रिक अंगठ्याचा ठसा व फोटोद्वारे ओळख पटवून, "${act.customDocumentTitle || act.documentType}" या दस्तऐवजावर स्वेच्छेने स्वाक्षरी करून शपथपूर्वक सत्यकथन केले.`
+                  : lang === 'hi'
+                  ? `मेरे समक्ष व्यक्तिगत रूप से उपस्थित होकर, बायोमेट्रिक अंगूठे के निशान एवं फ़ोटो द्वारा विधिवत पहचान सत्यापित कराकर, "${act.customDocumentTitle || act.documentType}" दस्तावेज़ पर स्वेच्छा से हस्ताक्षर किए तथा शपथपूर्वक सत्यकथन किया।`
                   : `Solemnly affirmed and signed before me by the executants in respect of "${act.customDocumentTitle || act.documentType}" who appeared in person, were duly identified through verified biometric thumb impressions and photographic records, and acknowledged execution with free consent.`}
               </p>
 
@@ -482,13 +498,13 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 }}
               >
                 <span>
-                  <strong>{lang === 'mr' ? 'वही क्र.:' : 'Book No:'}</strong> {bookNo}
+                  <strong>{lang === 'mr' ? 'वही क्र.:' : lang === 'hi' ? 'बही सं.:' : 'Book No:'}</strong> {bookNo}
                 </span>
                 <span>
-                  <strong>{lang === 'mr' ? 'पान क्र.:' : 'Page No:'}</strong> {pageNo}
+                  <strong>{lang === 'mr' ? 'पान क्र.:' : lang === 'hi' ? 'पृष्ठ सं.:' : 'Page No:'}</strong> {pageNo}
                 </span>
                 <span>
-                  <strong>{lang === 'mr' ? 'नोंद दिनांक:' : 'Date:'}</strong> {formatDate(act.date)}
+                  <strong>{lang === 'mr' ? 'नोंद दिनांक:' : lang === 'hi' ? 'प्रविष्टि तिथि:' : 'Date:'}</strong> {formatDate(act.date)}
                 </span>
               </div>
             </div>
@@ -507,18 +523,20 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 }}
               >
                 <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#000000' }}>
-                  {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : 'ADV. NILEEMA SARANGA'}
+                  {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : lang === 'hi' ? 'एड. नीलिमा सारंगा' : 'ADV. NILEEMA SARANGA'}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: '#1E293B', fontWeight: 600 }}>
                   {lang === 'mr'
                     ? 'वकील आणि अधिकृत नॉटरी (भारत सरकार)'
+                    : lang === 'hi'
+                    ? 'अधिवक्ता एवं आधिकारिक नोटरी (भारत सरकार)'
                     : 'Advocate & Notary Public (Govt. of India)'}
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#475569' }}>
                   {profile.regNo}
                 </div>
                 <div style={{ fontSize: '0.66rem', color: '#64748B', fontWeight: 600 }}>
-                  {lang === 'mr' ? 'कार्यक्षेत्र: बदलापूर, ठाणे जिल्हा' : 'Area: Badlapur, Dist. Thane'}
+                  {lang === 'mr' ? 'कार्यक्षेत्र: बदलापूर, ठाणे जिल्हा' : lang === 'hi' ? 'कार्यक्षेत्र: बदलापुर, ठाणे ज़िला' : 'Area: Badlapur, Dist. Thane'}
                 </div>
               </div>
             </div>
