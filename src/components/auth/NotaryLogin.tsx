@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { NotaryProfile, AccessRequest } from '../../types/notary';
 import { StorageService } from '../../services/storageService';
+import { AUTHORIZED_ACCOUNTS } from '../../config/authorizedAccounts';
 import { TRANSLATIONS, type Language } from '../../i18n/translations';
 import { NotaryLogo } from '../common/NotaryLogo';
 import {
@@ -15,8 +16,9 @@ import {
   CheckCircle2,
   Send,
   MessageCircle,
-  KeyRound,
   ShieldCheck,
+  Building2,
+  KeyRound,
 } from 'lucide-react';
 
 interface NotaryLoginProps {
@@ -33,15 +35,15 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
   const t = TRANSLATIONS[lang];
   const [activeTab, setActiveTab] = useState<'signin' | 'request'>('signin');
 
-  // Sign-in state
-  const [username, setUsername] = useState<string>('nileema');
-  const [password, setPassword] = useState<string>('notary123');
+  // Sign-In State
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
-  const [showDemoAccounts, setShowDemoAccounts] = useState<boolean>(true);
+  const [showQuickSelect, setShowQuickSelect] = useState<boolean>(false);
 
-  // Request Access state
+  // Request Access State
   const [reqName, setReqName] = useState<string>('');
   const [reqRegNo, setReqRegNo] = useState<string>('');
   const [reqMobile, setReqMobile] = useState<string>('');
@@ -50,10 +52,16 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
   const [reqNotes, setReqNotes] = useState<string>('');
   const [submittedRequest, setSubmittedRequest] = useState<AccessRequest | null>(null);
 
-  // Handle Login submission
+  // Handle Sign-In
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+
+    if (!username.trim() || !password.trim()) {
+      setLoginError('Please enter both username and password.');
+      return;
+    }
+
     setIsLoggingIn(true);
 
     setTimeout(() => {
@@ -61,25 +69,23 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
       if (account) {
         onLogin(account.profile);
       } else {
-        setLoginError(t.loginInvalidCredentialsError);
+        setLoginError('Invalid credentials. Please verify your assigned username and password.');
         setIsLoggingIn(false);
       }
-    }, 200);
+    }, 250);
   };
 
-  // Quick autofill helper
-  const handleAutofill = (demoUser: string, demoPass: string) => {
-    setUsername(demoUser);
-    setPassword(demoPass);
+  // Quick Autofill for Authorized Accounts
+  const handleAutofill = (u: string, p: string) => {
+    setUsername(u);
+    setPassword(p);
     setLoginError('');
   };
 
-  // Handle Access Request submission
+  // Handle Request Access Submission
   const handleRequestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reqName.trim() || !reqMobile.trim()) {
-      return;
-    }
+    if (!reqName.trim() || !reqMobile.trim()) return;
 
     const newReq = StorageService.createAccessRequest({
       applicantName: reqName.trim(),
@@ -93,60 +99,114 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
     setSubmittedRequest(newReq);
   };
 
-  // Prepare WhatsApp message
   const waText = encodeURIComponent(
-    `Hello! I am an Advocate & Notary Public interested in getting access to the Digital Notary Desk portal.\n\nName: ${reqName || 'Advocate'}\nRegistration: ${reqRegNo || 'Govt of India'}\nJurisdiction: ${reqJurisdiction || 'District Court'}\n\nPlease issue me a login username and password.`
+    `Hello! I am an Advocate & Notary Public requesting official workstation setup.\n\nName: ${reqName || 'Advocate'}\nReg: ${reqRegNo || 'Bar Council'}\nEmail: ${reqEmail}\nJurisdiction: ${reqJurisdiction || 'District Court'}`
   );
 
   return (
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #F8FAFC 0%, #EEF2F6 100%)',
+        background: 'linear-gradient(180deg, #0A1128 0%, #0F172A 50%, #1E293B 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem 1rem',
+        padding: '2.5rem 1.25rem',
         boxSizing: 'border-box',
         position: 'relative',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      {/* Top Language Switcher */}
+      {/* Top Header: Statutory Badge & Language Selector */}
       <div
         style={{
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           width: '100%',
-          maxWidth: '520px',
+          maxWidth: '500px',
           marginBottom: '1.25rem',
         }}
       >
-        <div className="lang-pill-group" style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <Globe size={13} color="#B91C1C" />
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '7px',
+            color: '#94A3B8',
+            fontSize: '0.76rem',
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+          }}
+        >
+          <ShieldCheck size={16} color="#10B981" />
+          <span>Section 65B &amp; Form XV Compliant</span>
+        </div>
+
+        {/* Language Selector */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '999px',
+            padding: '2px 4px',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <Globe size={13} color="#CBD5E1" style={{ marginLeft: '6px', marginRight: '4px' }} />
           <button
             type="button"
             className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
             onClick={() => onChangeLang('en')}
-            title="English"
+            style={{
+              background: lang === 'en' ? '#FFFFFF' : 'transparent',
+              color: lang === 'en' ? '#0F172A' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '0.74rem',
+              border: 'none',
+              padding: '3px 8px',
+              borderRadius: '999px',
+              cursor: 'pointer',
+            }}
           >
-            English
+            EN
           </button>
           <button
             type="button"
             className={`lang-btn ${lang === 'mr' ? 'active' : ''}`}
             onClick={() => onChangeLang('mr')}
-            title="मराठी (Marathi)"
+            style={{
+              background: lang === 'mr' ? '#FFFFFF' : 'transparent',
+              color: lang === 'mr' ? '#0F172A' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '0.74rem',
+              border: 'none',
+              padding: '3px 8px',
+              borderRadius: '999px',
+              cursor: 'pointer',
+            }}
           >
-            मराठी
+            MR
           </button>
           <button
             type="button"
             className={`lang-btn ${lang === 'hi' ? 'active' : ''}`}
             onClick={() => onChangeLang('hi')}
-            title="हिंदी (Hindi)"
+            style={{
+              background: lang === 'hi' ? '#FFFFFF' : 'transparent',
+              color: lang === 'hi' ? '#0F172A' : '#94A3B8',
+              fontWeight: 700,
+              fontSize: '0.74rem',
+              border: 'none',
+              padding: '3px 8px',
+              borderRadius: '999px',
+              cursor: 'pointer',
+            }}
           >
-            हिंदी
+            HI
           </button>
         </div>
       </div>
@@ -155,19 +215,19 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
       <div
         style={{
           width: '100%',
-          maxWidth: '520px',
+          maxWidth: '500px',
           background: '#FFFFFF',
-          borderRadius: '16px',
-          boxShadow: '0 20px 40px -15px rgba(185, 28, 28, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05)',
-          border: '1px solid #E2E8F0',
+          borderRadius: '20px',
+          boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
           overflow: 'hidden',
+          transition: 'all 0.25s ease',
         }}
       >
-        {/* Card Header with Red & White Emblem */}
+        {/* Card Header: Official Legal Crest */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #7F1D1D 0%, #B91C1C 60%, #991B1B 100%)',
-            padding: '2rem 1.75rem 1.75rem',
+            background: 'linear-gradient(135deg, #7F1D1D 0%, #991B1B 50%, #831843 100%)',
+            padding: '2.25rem 2rem 2rem',
             color: '#FFFFFF',
             textAlign: 'center',
             position: 'relative',
@@ -176,22 +236,24 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
           <div
             style={{
               display: 'inline-flex',
-              padding: '6px',
+              padding: '8px',
               borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(8px)',
-              marginBottom: '0.75rem',
+              background: 'rgba(255, 255, 255, 0.14)',
+              backdropFilter: 'blur(10px)',
+              marginBottom: '0.85rem',
+              boxShadow: '0 6px 18px rgba(0, 0, 0, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
             }}
           >
-            <NotaryLogo size={64} />
+            <NotaryLogo size={68} />
           </div>
 
           <h1
             style={{
               margin: '0 0 0.35rem 0',
-              fontSize: '1.45rem',
+              fontSize: '1.5rem',
               fontWeight: 800,
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.025em',
               color: '#FFFFFF',
             }}
           >
@@ -200,14 +262,14 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
 
           <p
             style={{
-              margin: '0 auto 0.75rem',
-              fontSize: '0.82rem',
+              margin: '0 auto 0.85rem',
+              fontSize: '0.84rem',
               color: '#FEE2E2',
-              lineHeight: 1.4,
+              lineHeight: 1.45,
               maxWidth: '380px',
             }}
           >
-            {t.loginSubheading}
+            Official Notarial Workstation &amp; Biometric Form XV Register
           </p>
 
           <span
@@ -215,7 +277,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '3px 12px',
+              padding: '4px 14px',
               borderRadius: '999px',
               background: 'rgba(255, 255, 255, 0.2)',
               color: '#FFFFFF',
@@ -226,12 +288,12 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
               border: '1px solid rgba(255, 255, 255, 0.25)',
             }}
           >
-            <ShieldCheck size={12} />
-            <span>{t.loginPortalBadge}</span>
+            <ShieldCheck size={13} />
+            <span>Notaries Act, 1952 • Govt. of India</span>
           </span>
         </div>
 
-        {/* Tab Navigation: Sign-In vs Request Access */}
+        {/* Tab Navigation */}
         <div
           style={{
             display: 'flex',
@@ -241,26 +303,29 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
         >
           <button
             type="button"
-            onClick={() => setActiveTab('signin')}
+            onClick={() => {
+              setActiveTab('signin');
+              setLoginError('');
+            }}
             style={{
               flex: 1,
-              padding: '0.85rem 1rem',
+              padding: '0.95rem 1rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '6px',
               fontWeight: 700,
               fontSize: '0.86rem',
               border: 'none',
               background: activeTab === 'signin' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'signin' ? '#B91C1C' : '#64748B',
-              borderBottom: activeTab === 'signin' ? '2.5px solid #B91C1C' : '2.5px solid transparent',
+              color: activeTab === 'signin' ? '#991B1B' : '#64748B',
+              borderBottom: activeTab === 'signin' ? '2.5px solid #991B1B' : '2.5px solid transparent',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
           >
-            <KeyRound size={16} />
-            <span>{t.loginCredentialsTab}</span>
+            <Lock size={15} />
+            <span>Chamber Sign-In</span>
           </button>
 
           <button
@@ -268,44 +333,43 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
             onClick={() => setActiveTab('request')}
             style={{
               flex: 1,
-              padding: '0.85rem 1rem',
+              padding: '0.95rem 1rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: '6px',
               fontWeight: 700,
               fontSize: '0.86rem',
               border: 'none',
               background: activeTab === 'request' ? '#FFFFFF' : 'transparent',
-              color: activeTab === 'request' ? '#B91C1C' : '#64748B',
-              borderBottom: activeTab === 'request' ? '2.5px solid #B91C1C' : '2.5px solid transparent',
+              color: activeTab === 'request' ? '#991B1B' : '#64748B',
+              borderBottom: activeTab === 'request' ? '2.5px solid #991B1B' : '2.5px solid transparent',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
           >
-            <Send size={15} />
-            <span>{t.loginRequestTab}</span>
+            <Send size={14} />
+            <span>Request Access</span>
           </button>
         </div>
 
         {/* Card Body */}
-        <div style={{ padding: '1.75rem' }}>
+        <div style={{ padding: '2rem 1.75rem' }}>
           {activeTab === 'signin' ? (
             /* TAB 1: AUTHORIZED CREDENTIAL SIGN-IN */
             <form onSubmit={handleSignIn}>
-              {/* Error Message */}
               {loginError && (
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
-                    padding: '0.75rem 1rem',
+                    padding: '0.85rem 1rem',
                     background: '#FEF2F2',
                     border: '1px solid #FCA5A5',
-                    borderRadius: '8px',
+                    borderRadius: '10px',
                     color: '#991B1B',
-                    fontSize: '0.82rem',
+                    fontSize: '0.83rem',
                     fontWeight: 600,
                     marginBottom: '1.25rem',
                   }}
@@ -316,15 +380,15 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
               )}
 
               {/* Username Input */}
-              <div className="form-group" style={{ marginBottom: '1.1rem' }}>
-                <label className="form-label" style={{ fontWeight: 700, color: '#334155' }}>
-                  {t.loginUsernameLabel} *
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.86rem' }}>
+                  Advocate ID / Assigned Username *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span
                     style={{
                       position: 'absolute',
-                      left: '12px',
+                      left: '14px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       color: '#94A3B8',
@@ -332,15 +396,21 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       alignItems: 'center',
                     }}
                   >
-                    <User size={16} />
+                    <User size={18} />
                   </span>
                   <input
                     type="text"
                     className="form-input"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your assigned username"
-                    style={{ paddingLeft: '38px', height: '44px', fontSize: '0.92rem' }}
+                    placeholder="Enter your assigned chamber username"
+                    style={{
+                      paddingLeft: '42px',
+                      height: '48px',
+                      fontSize: '0.94rem',
+                      borderRadius: '10px',
+                      borderColor: '#CBD5E1',
+                    }}
                     required
                     autoFocus
                   />
@@ -348,15 +418,15 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
               </div>
 
               {/* Password Input */}
-              <div className="form-group" style={{ marginBottom: '1.4rem' }}>
-                <label className="form-label" style={{ fontWeight: 700, color: '#334155' }}>
-                  {t.loginPasswordLabel} *
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.86rem' }}>
+                  Chamber Security Passcode *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span
                     style={{
                       position: 'absolute',
-                      left: '12px',
+                      left: '14px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       color: '#94A3B8',
@@ -364,15 +434,22 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       alignItems: 'center',
                     }}
                   >
-                    <Lock size={16} />
+                    <Lock size={18} />
                   </span>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className="form-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter password"
-                    style={{ paddingLeft: '38px', paddingRight: '40px', height: '44px', fontSize: '0.92rem' }}
+                    placeholder="Enter chamber passcode"
+                    style={{
+                      paddingLeft: '42px',
+                      paddingRight: '44px',
+                      height: '48px',
+                      fontSize: '0.94rem',
+                      borderRadius: '10px',
+                      borderColor: '#CBD5E1',
+                    }}
                     required
                   />
                   <button
@@ -380,7 +457,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                     onClick={() => setShowPassword(!showPassword)}
                     style={{
                       position: 'absolute',
-                      right: '12px',
+                      right: '14px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       border: 'none',
@@ -391,12 +468,12 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       alignItems: 'center',
                     }}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-              {/* Sign In Button */}
+              {/* Enter Workstation Button */}
               <button
                 type="submit"
                 className="btn btn-seal btn-lg"
@@ -405,19 +482,21 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                   width: '100%',
                   fontWeight: 800,
                   fontSize: '0.96rem',
+                  height: '48px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(185, 28, 28, 0.25)',
+                  boxShadow: '0 4px 14px rgba(153, 27, 27, 0.3)',
+                  borderRadius: '10px',
                 }}
               >
-                <span>{isLoggingIn ? 'Verifying Credentials...' : t.loginEnterPortalBtn}</span>
+                <span>{isLoggingIn ? 'Verifying Chamber Credentials...' : 'Authenticate & Open Workstation'}</span>
                 <ArrowRight size={18} />
               </button>
 
-              {/* Quick Demo Credential Helper */}
-              <div style={{ marginTop: '1.5rem', background: '#F8FAFC', borderRadius: '10px', padding: '0.85rem 1rem', border: '1px solid #E2E8F0' }}>
+              {/* Quick Account Selector */}
+              <div style={{ marginTop: '1.5rem', background: '#F8FAFC', borderRadius: '12px', padding: '0.95rem 1rem', border: '1px solid #E2E8F0' }}>
                 <div
                   style={{
                     display: 'flex',
@@ -428,101 +507,59 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                     fontWeight: 700,
                     color: '#475569',
                   }}
-                  onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+                  onClick={() => setShowQuickSelect(!showQuickSelect)}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <KeyRound size={13} color="#B91C1C" />
-                    <span>{t.loginDemoCredentialsLabel}</span>
+                    <KeyRound size={14} color="#991B1B" />
+                    <span>Configured Chamber Accounts ({AUTHORIZED_ACCOUNTS.length})</span>
                   </span>
-                  <span style={{ color: '#B91C1C', fontSize: '0.74rem' }}>
-                    {showDemoAccounts ? 'Hide' : 'Show'}
+                  <span style={{ color: '#991B1B', fontSize: '0.74rem', fontWeight: 600 }}>
+                    {showQuickSelect ? 'Hide' : 'Quick Fill'}
                   </span>
                 </div>
 
-                {showDemoAccounts && (
+                {showQuickSelect && (
                   <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div
-                      onClick={() => handleAutofill('nileema', 'notary123')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 10px',
-                        background: '#FFFFFF',
-                        borderRadius: '6px',
-                        border: '1px solid #E2E8F0',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                      }}
-                      title="Click to autofill Adv. Nileema Saranga"
-                    >
-                      <div>
-                        <strong>Adv. Nileema Saranga</strong> (Reg. 15960)
+                    {AUTHORIZED_ACCOUNTS.map((acc) => (
+                      <div
+                        key={acc.username}
+                        onClick={() => handleAutofill(acc.username, acc.password)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '7px 10px',
+                          background: '#FFFFFF',
+                          borderRadius: '8px',
+                          border: '1px solid #E2E8F0',
+                          cursor: 'pointer',
+                          fontSize: '0.76rem',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title={`Click to fill ${acc.profile.notaryName}`}
+                      >
+                        <div>
+                          <strong>{acc.profile.notaryName}</strong>
+                          <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{acc.profile.regNo}</div>
+                        </div>
+                        <div style={{ color: '#991B1B', fontWeight: 600, fontFamily: 'monospace' }}>
+                          user: <strong>{acc.username}</strong>
+                        </div>
                       </div>
-                      <div style={{ color: '#B91C1C', fontWeight: 600 }}>
-                        User: <code style={{ color: '#0F172A' }}>nileema</code> | Pass: <code style={{ color: '#0F172A' }}>notary123</code>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => handleAutofill('rajesh', 'notary123')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 10px',
-                        background: '#FFFFFF',
-                        borderRadius: '6px',
-                        border: '1px solid #E2E8F0',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                      }}
-                      title="Click to autofill Adv. Rajesh K. Verma"
-                    >
-                      <div>
-                        <strong>Adv. Rajesh Verma</strong> (Delhi)
-                      </div>
-                      <div style={{ color: '#B91C1C', fontWeight: 600 }}>
-                        User: <code style={{ color: '#0F172A' }}>rajesh</code> | Pass: <code style={{ color: '#0F172A' }}>notary123</code>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => handleAutofill('anand', 'notary123')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 10px',
-                        background: '#FFFFFF',
-                        borderRadius: '6px',
-                        border: '1px solid #E2E8F0',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                      }}
-                      title="Click to autofill Adv. Anand R. Kulkarni"
-                    >
-                      <div>
-                        <strong>Adv. Anand Kulkarni</strong> (Pune)
-                      </div>
-                      <div style={{ color: '#B91C1C', fontWeight: 600 }}>
-                        User: <code style={{ color: '#0F172A' }}>anand</code> | Pass: <code style={{ color: '#0F172A' }}>notary123</code>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
             </form>
           ) : (
-            /* TAB 2: INTERESTED? REQUEST WORKSTATION ACCESS */
+            /* TAB 2: REQUEST ACCESS FOR NEW ADVOCATES */
             <div>
               {submittedRequest ? (
-                /* Success Screen After Submission */
-                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                   <div
                     style={{
-                      width: '56px',
-                      height: '56px',
+                      width: '60px',
+                      height: '60px',
                       borderRadius: '50%',
                       background: '#ECFDF5',
                       border: '2px solid #A7F3D0',
@@ -530,35 +567,35 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: '#059669',
-                      margin: '0 auto 1rem',
+                      margin: '0 auto 1.25rem',
                     }}
                   >
-                    <CheckCircle2 size={32} />
+                    <CheckCircle2 size={34} />
                   </div>
 
-                  <h3 style={{ margin: '0 0 0.5rem', color: '#065F46', fontWeight: 800 }}>
-                    {t.loginRequestSuccessTitle}
+                  <h3 style={{ margin: '0 0 0.5rem', color: '#065F46', fontWeight: 800, fontSize: '1.2rem' }}>
+                    Access Request Submitted!
                   </h3>
 
-                  <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5, margin: '0 auto 1.5rem', maxWidth: '380px' }}>
-                    {t.loginRequestSuccessDesc}
+                  <p style={{ fontSize: '0.86rem', color: '#475569', lineHeight: 1.5, margin: '0 auto 1.5rem', maxWidth: '380px' }}>
+                    Your request has been received. The administrator will issue your authorized chamber username and password via WhatsApp or email.
                   </p>
 
                   <div
                     style={{
                       background: '#F8FAFC',
                       border: '1px dashed #CBD5E1',
-                      borderRadius: '8px',
-                      padding: '0.75rem 1rem',
-                      fontSize: '0.8rem',
+                      borderRadius: '10px',
+                      padding: '0.85rem 1.1rem',
+                      fontSize: '0.82rem',
                       color: '#334155',
                       textAlign: 'left',
-                      marginBottom: '1.25rem',
+                      marginBottom: '1.35rem',
                     }}
                   >
-                    <div><strong>Request ID:</strong> {submittedRequest.id}</div>
-                    <div><strong>Name:</strong> {submittedRequest.applicantName}</div>
-                    <div><strong>Status:</strong> <span style={{ color: '#D97706', fontWeight: 700 }}>Pending Approval</span></div>
+                    <div><strong>Request Reference:</strong> {submittedRequest.id}</div>
+                    <div><strong>Advocate:</strong> {submittedRequest.applicantName}</div>
+                    <div><strong>Status:</strong> <span style={{ color: '#D97706', fontWeight: 700 }}>Pending Verification</span></div>
                   </div>
 
                   <a
@@ -576,11 +613,13 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       borderColor: '#25D366',
                       color: '#FFFFFF',
                       fontWeight: 700,
-                      marginBottom: '0.75rem',
+                      marginBottom: '0.85rem',
+                      height: '44px',
+                      borderRadius: '10px',
                     }}
                   >
-                    <MessageCircle size={16} />
-                    <span>{t.loginRequestWhatsAppBtn}</span>
+                    <MessageCircle size={17} />
+                    <span>Contact Administrator on WhatsApp</span>
                   </a>
 
                   <button
@@ -590,24 +629,23 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       setActiveTab('signin');
                     }}
                     className="btn btn-outline"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', borderRadius: '10px' }}
                   >
-                    Back to Sign In
+                    Return to Login
                   </button>
                 </div>
               ) : (
-                /* Access Request Form */
                 <form onSubmit={handleRequestSubmit}>
-                  <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ marginBottom: '1.35rem' }}>
                     <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
-                      {t.loginRequestHeading}
+                      Request Workstation Credentials
                     </h3>
-                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748B', lineHeight: 1.45 }}>
-                      {t.loginRequestDesc}
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B', lineHeight: 1.45 }}>
+                      If you are an Advocate or Notary Public, submit your details below to receive your authorized login credentials.
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.95rem' }}>
                     <div className="form-group">
                       <label className="form-label">{t.loginRequestNameLabel} *</label>
                       <input
@@ -620,7 +658,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                       />
                     </div>
 
-                    <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                       <div className="form-group">
                         <label className="form-label">{t.loginRequestRegNoLabel}</label>
                         <input
@@ -652,7 +690,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                         className="form-input"
                         value={reqJurisdiction}
                         onChange={(e) => setReqJurisdiction(e.target.value)}
-                        placeholder="e.g. Thane District Court & Kalyan Taluka"
+                        placeholder="e.g. Thane District Court &amp; Kalyan Taluka"
                         required
                       />
                     </div>
@@ -675,7 +713,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                         className="form-input"
                         value={reqNotes}
                         onChange={(e) => setReqNotes(e.target.value)}
-                        placeholder="e.g. I need biometric attestation and Form XV register"
+                        placeholder="e.g. Daily notarial registry and biometric attestation"
                       />
                     </div>
 
@@ -690,6 +728,8 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
+                        borderRadius: '10px',
+                        height: '46px',
                       }}
                     >
                       <Send size={16} />
@@ -704,26 +744,40 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
           {/* Footer Security Badges */}
           <div
             style={{
-              marginTop: '1.5rem',
-              paddingTop: '1rem',
+              marginTop: '1.75rem',
+              paddingTop: '1.1rem',
               borderTop: '1px dashed #E2E8F0',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '0.75rem',
+              gap: '0.85rem',
               fontSize: '0.74rem',
               color: '#64748B',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Fingerprint size={14} color="#059669" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Fingerprint size={15} color="#059669" />
               <span>SecuGen USB Biometrics</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Lock size={14} color="#B91C1C" />
-              <span>100% Offline Encrypted</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Building2 size={15} color="#991B1B" />
+              <span>Encrypted Chamber Vault</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Statutory Footer Citation */}
+      <div
+        style={{
+          marginTop: '1.5rem',
+          textAlign: 'center',
+          fontSize: '0.74rem',
+          color: '#64748B',
+          maxWidth: '480px',
+          lineHeight: 1.5,
+        }}
+      >
+        Notarial records and biometric attestation entries are protected by statutory evidentiary audit trails under the Indian Evidence Act and Information Technology Act, 2000.
       </div>
     </div>
   );

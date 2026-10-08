@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { NotarialAct, NotaryProfile } from '../../types/notary';
 import { StorageService } from '../../services/storageService';
-import { Printer, ArrowLeft, Globe, BookOpen } from 'lucide-react';
+import { QrVerificationService } from '../../services/qrVerificationService';
+import { Printer, ArrowLeft, Globe, BookOpen, QrCode } from 'lucide-react';
 import { TRANSLATIONS, type Language } from '../../i18n/translations';
 import { NotaryLogo } from '../common/NotaryLogo';
 
@@ -24,8 +25,18 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
 }) => {
   const [bookNo, setBookNo] = useState<number>(act.bookNo || 1);
   const [pageNo, setPageNo] = useState<number>(act.pageNo || 28);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [verificationUrl, setVerificationUrl] = useState<string>('');
 
   const t = TRANSLATIONS[lang];
+
+  useEffect(() => {
+    const url = QrVerificationService.generateVerificationUrl(act, profile);
+    setVerificationUrl(url);
+    QrVerificationService.generateQrCode(url).then((dataUrl) => {
+      setQrCodeDataUrl(dataUrl);
+    });
+  }, [act, profile]);
 
   // Format date to DD-MM-YYYY
   const formatDate = (dateStr: string) => {
@@ -190,6 +201,20 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
             </button>
           )}
 
+          {verificationUrl && (
+            <a
+              href={verificationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary"
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              title="Open public verification page as seen by citizens or authorities"
+            >
+              <QrCode size={16} color="#B91C1C" />
+              <span>Verify Online (QR Preview)</span>
+            </a>
+          )}
+
           <button className="btn btn-seal" onClick={handlePrint} style={{ fontWeight: 700 }}>
             <Printer size={18} />
             {t.certPrintBtn}
@@ -207,7 +232,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 <NotaryLogo size={50} showShadow={false} />
               </div>
               <div className="cert-firm-name">
-                {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : lang === 'hi' ? 'एड. नीलिमा सारंगा' : profile.firmName}
+                {profile.firmName || profile.notaryName}
               </div>
               <div
                 style={{
@@ -457,15 +482,15 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
             )}
           </div>
 
-          {/* Attestation Jurat & Clean Notary Signing Area (No QR code, No red stamp box) */}
+          {/* Attestation Jurat, Statutory QR Verification Code, & Notary Signature Area */}
           <div
             style={{
               marginTop: '16px',
               borderTop: '2px solid #000000',
               paddingTop: '10px',
               display: 'grid',
-              gridTemplateColumns: '1fr 240px',
-              gap: '24px',
+              gridTemplateColumns: '1fr 125px 220px',
+              gap: '16px',
               alignItems: 'flex-start',
             }}
           >
@@ -509,7 +534,89 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               </div>
             </div>
 
-            {/* Clean, authentic signing and physical stamp space for Mom */}
+            {/* Official Statutory QR Code for Online Verification */}
+            <div
+              style={{
+                textAlign: 'center',
+                border: '1.5px solid #0F172A',
+                borderRadius: '6px',
+                padding: '6px 4px',
+                background: '#FFFFFF',
+                width: '125px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {qrCodeDataUrl ? (
+                <a
+                  href={verificationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Click or scan with camera to view on Notary Co-Pilot portal"
+                  style={{ textDecoration: 'none', display: 'block' }}
+                >
+                  <img
+                    src={qrCodeDataUrl}
+                    alt={`Verification QR Code for ${act.serialNo}`}
+                    style={{
+                      width: '96px',
+                      height: '96px',
+                      display: 'block',
+                      margin: '0 auto',
+                    }}
+                  />
+                </a>
+              ) : (
+                <div
+                  style={{
+                    width: '96px',
+                    height: '96px',
+                    background: '#F8FAFC',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.62rem',
+                    color: '#64748B',
+                    margin: '0 auto',
+                  }}
+                >
+                  Loading QR...
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: '0.62rem',
+                  fontWeight: 900,
+                  color: '#0F172A',
+                  letterSpacing: '0.04em',
+                  marginTop: '4px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {lang === 'mr' ? 'पडताळणी क्यूआर' : lang === 'hi' ? 'सत्यापन क्यूआर' : 'SCAN TO VERIFY'}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.56rem',
+                  color: '#991B1B',
+                  fontWeight: 800,
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {act.serialNo}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.48rem',
+                  color: '#64748B',
+                  marginTop: '1px',
+                }}
+              >
+                notary-copilot.app
+              </div>
+            </div>
+
+            {/* Clean, authentic signing and physical stamp space for Notary */}
             <div style={{ textAlign: 'center', paddingTop: '10px' }}>
               {/* Blank space for physical brass seal and ink signature */}
               <div style={{ minHeight: '65px' }}></div>
@@ -522,8 +629,8 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                   marginLeft: 'auto',
                 }}
               >
-                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#000000' }}>
-                  {lang === 'mr' ? 'ॲड. निलिमा सारंगा' : lang === 'hi' ? 'एड. नीलिमा सारंगा' : 'ADV. NILEEMA SARANGA'}
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: '#000000', textTransform: 'uppercase' }}>
+                  {profile.notaryName}
                 </div>
                 <div style={{ fontSize: '0.7rem', color: '#1E293B', fontWeight: 600 }}>
                   {lang === 'mr'
@@ -535,9 +642,15 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 <div style={{ fontSize: '0.68rem', color: '#475569' }}>
                   {profile.regNo}
                 </div>
-                <div style={{ fontSize: '0.66rem', color: '#64748B', fontWeight: 600 }}>
-                  {lang === 'mr' ? 'कार्यक्षेत्र: बदलापूर, ठाणे जिल्हा' : lang === 'hi' ? 'कार्यक्षेत्र: बदलापुर, ठाणे ज़िला' : 'Area: Badlapur, Dist. Thane'}
-                </div>
+                {profile.areaOfPractice && (
+                  <div style={{ fontSize: '0.66rem', color: '#64748B', fontWeight: 600 }}>
+                    {lang === 'mr'
+                      ? `कार्यक्षेत्र: ${profile.areaOfPractice}`
+                      : lang === 'hi'
+                      ? `कार्यक्षेत्र: ${profile.areaOfPractice}`
+                      : `Area: ${profile.areaOfPractice}`}
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -145,6 +145,151 @@ ${profile.officeAddress}
     },
   },
   {
+    id: 'krutidev-court-affidavit',
+    title: 'Court Affidavit (Kruti Dev 010 / कृतिदेव ०१०)',
+    marathiTitle: 'न्यायालयीन प्रतिज्ञापत्र (कृतिदेव ०१०)',
+    hindiTitle: 'न्यायालयीन शपथ पत्र (कृतिदेव 010 फ़ॉन्ट)',
+    category: 'Affidavit',
+    description: 'Universal court & legal typist format in Kruti Dev 010 font for Indian District Courts, Sub-Divisions & High Court registries.',
+    generateText: (act, profile) => {
+      const deponent = act.parties[0] || {
+        name: 'शपथग्रहीता',
+        relationType: 'आत्मज',
+        relativeName: 'पिता का नाम',
+        age: '30',
+        address: 'स्थानीय पता',
+        idType: 'आधार कार्ड',
+        idNumber: 'XXXXXXXXXXXX',
+      };
+
+      return `'kiFk&i=
+¼/kkjk 139 flfoy izfdz;k lafgrk rFkk uksVjh vf/kfu;e 1952 ds varxZr½
+
+le{k % Jheku~ uksVjh ifCyd egksn;] ${profile.areaOfPractice.split(',')[0]}
+
+eSa ${deponent.name}] ${deponent.relationType} ${deponent.relativeName}] vk;q yxHkx ${deponent.age || '30'} o"kZ] fuoklh ${deponent.address}] 'kiFkiwoZd fuEu c;ku djrk@djrh gw¡ %
+
+1- ;g fd eSa Hkkjr dk ewy fuoklh gw¡ rFkk 'kiFki= esa of.kZr irs ij fuokl djrk gw¡A
+2- ;g fd mDr nLrkost@'kiFki= esa fn, x, leLr rF; esjs futh Kku o fo'okl ds vuqlkj lR; o lgh gSaA
+3- ;g fd blesa dksbZ Hkh rF; fNik;k ugha x;k gSA
+4- ;g fd ;g 'kiFki= eSaus 'kkldh; @ U;k;ky;hu dk;Z gsrq viuh LosPNk ls fcuk fdlh ncko ds fu"ikfnr fd;k gSA
+
+'kiFkxzghrk ¼Deponent½
+
+lR;kiu ¼Verification½
+eSa mijksDr 'kiFkxzghrk lR;kfir djrk gw¡ fd mDr 'kiFki= dh pj.k la[;k 1 ls 4 esa of.kZr leLr dFku esjs futh Kku o fo'okl ds vuqlkj lgh o lR; gSaA vr% vkt fnukad ${act.date} dks LFkku ${profile.areaOfPractice.split(',')[0]} ij lR;kfir fd;kA
+
+'kiFkxzghrk ¼Deponent½
+
+-----------------------------------------------------------------------------
+uksVjh izekf.krdj.k ¼Notary Attestation½
+mDr 'kiFkxzghrk esjs le{k mifLFkr gq, ,oa mUgksaus vius gLrk{kj vafdr fd,A
+
+uksVjh iathdj.k la[;k % ${act.serialNo}
+iqLrd la[;k % ${act.bookNo} | i\`"B la[;k % ${act.pageNo}
+fnukad % ${act.date}
+
+${profile.notaryName}
+${profile.qualifications}
+${profile.regNo}
+`;
+    },
+    generateHtml: (act, profile) => {
+      const deponent = act.parties[0] || {
+        name: 'शपथग्रहीता',
+        relationType: 'आत्मज',
+        relativeName: 'पिता का नाम',
+        age: '30',
+        address: 'स्थानीय पता',
+        idType: 'Aadhaar Card',
+        idNumber: 'XXXXXXXXXXXX',
+      };
+
+      return `<div style="font-family: 'Kruti Dev 010', 'KrutiDev010', serif; font-size: 13pt; line-height: 1.7;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; margin-bottom: 6px;">'kiFk&i=</h2>
+    <div style="font-size: 11pt; color: #334155;">¼/kkjk 139 flfoy izfdz;k lafgrk rFkk uksVjh vf/kfu;e 1952 ds varxZr½</div>
+  </div>
+
+  <p style="text-align: left; font-weight: bold; margin-bottom: 18px; font-size: 13pt;">
+    le{k % Jheku~ uksVjh ifCyd egksn;] ${profile.areaOfPractice.split(',')[0]}
+  </p>
+
+  <p style="text-align: justify; margin-bottom: 16px;">
+    eSa <strong>${deponent.name}</strong>] vkRet <strong>${deponent.relativeName}</strong>] vk;q yxHkx <strong>${deponent.age || '30'}</strong> o"kZ] fuoklh <strong>${deponent.address}</strong>] 'kiFkiwoZd fuEu dFku djrk@djrh gw¡ %
+  </p>
+
+  <ol style="margin-left: 28px; line-height: 1.8; margin-bottom: 24px;">
+    <li style="margin-bottom: 12px; text-align: justify;">
+      ;g fd eSa Hkkjr dk ewy fuoklh gw¡ rFkk mijksDr irs ij vius ifjokj lfgr fuokl djrk gw¡A
+    </li>
+    <li style="margin-bottom: 12px; text-align: justify;">
+      ;g fd mDr 'kiFki= esa fn, x, leLr rF; o dFku esjs futh Kku o fo'okl ds vuqlkj iw.kZr% lR; o lgh gSaA
+    </li>
+    <li style="margin-bottom: 12px; text-align: justify;">
+      ;g fd blesa dksbZ Hkh rF; fNik;k ugha x;k gS vkSj u gh dksbZ vlR; dFku vafdr fd;k x;k gSA
+    </li>
+    <li style="margin-bottom: 12px; text-align: justify;">
+      ;g fd ;g 'kiFki= eSaus viuh iw.kZ lksp&le> o LosPNk ls fcuk fdlh vuqfpr ncko ds fu"ikfnr fd;k gSA
+    </li>
+  </ol>
+
+  <table style="width: 100%; margin-top: 32px; margin-bottom: 24px;">
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%; text-align: right;">
+        <p style="margin-bottom: 40px; font-weight: bold;">'kiFkxzghrk</p>
+        <p>¼-------------------------------------½</p>
+      </td>
+    </tr>
+  </table>
+
+  <div style="border-top: 1px dashed #64748b; padding-top: 18px; margin-top: 24px;">
+    <p style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 10px; font-size: 15pt;">lR;kiu</p>
+    <p style="text-align: justify; margin-bottom: 20px;">
+      eSa mijksDr 'kiFkxzghrk lR;kfir djrk@djrh gw¡ fd bl 'kiFki= dh dafMdk la[;k 1 yxk;r 4 esa of.kZr leLr rF; esjs futh Kku o fo'okl ds vuqlkj lgh o lR; gSaA vr% vkt fnukad <strong>${act.date}</strong> dks LFkku <strong>${profile.areaOfPractice.split(',')[0]}</strong> ij lR;kfir fd;kA
+    </p>
+
+    <table style="width: 100%;">
+      <tr>
+        <td style="width: 50%; font-size: 12pt;">
+          <p>igpkudrkZ %</p>
+          <br/><br/>
+          <p>-----------------------------------<br/>vf/koDrk @ igpkudrkZ</p>
+        </td>
+        <td style="width: 50%; text-align: right;">
+          <p style="margin-bottom: 40px; font-weight: bold;">'kiFkxzghrk</p>
+          <p>¼-------------------------------------½</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="margin-top: 32px; border: 1.5px solid #000; padding: 14px 18px; background: #fafafa;">
+    <div style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 8px; font-size: 13pt;">
+      uksVjh izekf.krdj.k ¼NOTARY ATTESTATION½
+    </div>
+    <table style="width: 100%; font-size: 11pt;">
+      <tr>
+        <td style="width: 55%; vertical-align: top; line-height: 1.6;">
+          <div><strong>uksVjh Øekad %</strong> ${act?.serialNo || 'NS-' + new Date().getFullYear() + '-XXXX'}</div>
+          <div><strong>iqLrd la[;k %</strong> ${act?.bookNo || 1} &nbsp;|&nbsp; <strong>i\`"B la[;k %</strong> ${act?.pageNo || 1}</div>
+          <div><strong>fnukad %</strong> ${act?.date || new Date().toISOString().split('T')[0]}</div>
+          <div style="font-size: 9.5pt; color: #444; margin-top: 4px;">esjs le{k 'kiFkiwoZd lR;kfir ,oa gLrk{kfjr fd;k x;kA</div>
+        </td>
+        <td style="width: 45%; vertical-align: top; text-align: right; line-height: 1.4;">
+          <div><strong>${profile.notaryName}</strong></div>
+          <div style="font-size: 10pt;">${profile.qualifications}</div>
+          <div style="font-size: 10pt;">${profile.regNo}</div>
+          <div style="font-size: 9pt; color: #444;">${profile.areaOfPractice}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>`;
+    },
+  },
+  {
     id: 'name-change-affidavit',
     title: 'Name Change / Discrepancy Affidavit',
     marathiTitle: 'नाव बदल / एकच व्यक्ती प्रतिज्ञापत्र',
@@ -808,4 +953,44 @@ export const NOTARY_SNIPPETS = {
     </td>
   </tr>
 </table>`,
+
+  krutiDevJuratClause: (profile: NotaryProfile, act?: NotarialAct) => `
+<div class="notary-inserted-snippet font-krutidev" style="font-family: 'Kruti Dev 010', 'KrutiDev010', serif; font-size: 11pt; border: 1.5px solid #000; padding: 12px 16px; margin-top: 24px; margin-bottom: 20px; background-color: #fafafa;">
+  <div style="text-align: center; font-weight: bold; margin-bottom: 8px; text-decoration: underline; font-size: 13pt;">
+    uksVjh izekf.krdj.k ¼NOTARY ATTESTATION½
+  </div>
+  <table style="width: 100%; font-size: 10.5pt;">
+    <tr>
+      <td style="vertical-align: top; width: 60%; line-height: 1.5;">
+        <div><strong>uksVjh Øekad %</strong> ${act?.serialNo || 'NS-' + new Date().getFullYear() + '-XXXX'}</div>
+        <div><strong>iqLrd la[;k %</strong> ${act?.bookNo || 1} &nbsp;|&nbsp; <strong>i\`"B la[;k %</strong> ${act?.pageNo || 1}</div>
+        <div><strong>fnukad %</strong> ${act?.date || new Date().toISOString().split('T')[0]}</div>
+        <div style="font-size: 9.5pt; color: #333; margin-top: 4px;">'kiFkxzghrk }kjk esjs le{k mifLFkr gksdj 'kiFkiwoZd dFku fd;k x;kA</div>
+      </td>
+      <td style="vertical-align: top; width: 40%; text-align: right; line-height: 1.3;">
+        <div style="font-weight: bold;">${profile.notaryName}</div>
+        <div style="font-size: 9pt;">${profile.qualifications}</div>
+        <div style="font-size: 9pt;">${profile.regNo}</div>
+        <div style="font-size: 8.5pt; color: #444;">${profile.areaOfPractice}</div>
+      </td>
+    </tr>
+  </table>
+</div>`,
+
+  krutiDevVerificationClause: (profile: NotaryProfile, dateStr?: string) => `
+<div class="notary-inserted-snippet font-krutidev" style="font-family: 'Kruti Dev 010', 'KrutiDev010', serif; font-size: 12.5pt; margin-top: 22px; margin-bottom: 18px; border-top: 1px dashed #94a3b8; padding-top: 14px;">
+  <p style="text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 8px; font-size: 14pt;">lR;kiu</p>
+  <p style="text-align: justify; line-height: 1.7; margin-bottom: 18px;">
+    eSa mijksDr 'kiFkxzghrk lR;kfir djrk@djrh gw¡ fd bl 'kiFki= dh leLr dafMdkvksa esa of.kZr rF; esjs futh Kku o fo'okl ds vuqlkj lR; o lgh gSaA vr% vkt fnukad <strong>${dateStr || new Date().toISOString().split('T')[0]}</strong> dks LFkku <strong>${profile.areaOfPractice.split(',')[0]}</strong> ij lR;kfir fd;kA
+  </p>
+  <table style="width: 100%;">
+    <tr>
+      <td style="width: 50%;"></td>
+      <td style="width: 50%; text-align: right;">
+        <p style="margin-bottom: 30px; font-weight: bold;">'kiFkxzghrk</p>
+        <p>¼---------------------------½</p>
+      </td>
+    </tr>
+  </table>
+</div>`,
 };

@@ -131,12 +131,33 @@ export interface Translations {
   loginDemoCredentialsLabel: string;
   logoutBtn: string;
   switchNotaryBtn: string;
+
+  // Email & OTP Authentication
+  loginEmailTab: string;
+  loginEmailLabel: string;
+  loginEmailPlaceholder: string;
+  loginSendOtpBtn: string;
+  loginSendingOtp: string;
+  loginOtpPrompt: string;
+  loginOtpLabel: string;
+  loginVerifyOtpBtn: string;
+  loginVerifyingOtp: string;
+  loginResendOtpBtn: string;
+  loginResendTimer: string;
+  loginChangeEmailBtn: string;
+  loginOtpInvalidError: string;
+  loginOtpExpiredError: string;
+  loginOtpAttemptsLeft: string;
+  loginOtpSimulatedBannerTitle: string;
+  loginOtpSimulatedBannerDesc: string;
+  loginQuickSelectAdvocate: string;
+  loginSecurityAuditNotice: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
   en: {
     brandTitle: 'Digital Notary Desk',
-    brandSubtitle: 'Advocate Nileema Saranga • Reg. No. 15960 / Govt. of India',
+    brandSubtitle: 'Official Notary Public • Government of India',
     actTag: 'Act 1952',
 
     tabDesk: 'New Notary Entry',
@@ -149,7 +170,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     secugenSim: 'SecuGen Sim',
     webcamReady: 'Webcam Ready',
 
-    deskTitle: "Adv. Nileema Saranga's Notary Desk",
+    deskTitle: 'Notary Public Desk',
     deskSubtitle: 'Step 1: Enter details → Step 2: Snap photo & SecuGen thumb scan → Step 3: Print Certificate & log Form XV',
     fillDemoBtn: 'Fill Sample Client Entry',
     generatePrintBtn: 'Generate & Print Certificate (A4)',
@@ -257,10 +278,31 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     loginDemoCredentialsLabel: 'Available Demo Credentials (Click to Autofill)',
     logoutBtn: 'Logout',
     switchNotaryBtn: 'Switch Notary',
+
+    // Email & OTP Authentication
+    loginEmailTab: 'Email OTP Sign-In',
+    loginEmailLabel: 'Official Registered Email ID',
+    loginEmailPlaceholder: 'advocate.name@barcouncil.in or your email',
+    loginSendOtpBtn: 'Send 6-Digit Authorization Code',
+    loginSendingOtp: 'Dispatching Secure OTP...',
+    loginOtpPrompt: 'Enter the 6-digit one-time authorization code dispatched to',
+    loginOtpLabel: 'One-Time Verification Code (OTP)',
+    loginVerifyOtpBtn: 'Verify Code & Enter Chamber',
+    loginVerifyingOtp: 'Verifying Security Token...',
+    loginResendOtpBtn: 'Resend Verification Code',
+    loginResendTimer: 'Resend code in',
+    loginChangeEmailBtn: 'Change Email Address',
+    loginOtpInvalidError: 'Invalid or incorrect OTP code. Please enter the valid 6-digit code.',
+    loginOtpExpiredError: 'Security token has expired. Please request a fresh OTP.',
+    loginOtpAttemptsLeft: 'attempts remaining before lockout',
+    loginOtpSimulatedBannerTitle: 'Ministry of Law / Chamber Secure Dispatch (Simulator)',
+    loginOtpSimulatedBannerDesc: 'Your one-time authorization code for official chamber workstation access is:',
+    loginQuickSelectAdvocate: 'Quick-Select Registered Advocate Profile:',
+    loginSecurityAuditNotice: 'Evidentiary Chain of Custody Active. All access attempts are cryptographically timestamped.',
   },
   mr: {
     brandTitle: 'डिजिटल नॉटरी डेस्क',
-    brandSubtitle: 'ॲड. निलिमा सारंगा • नोंदणी क्र. १५९६० / भारत सरकार',
+    brandSubtitle: 'अधिकृत नोटरी पब्लिक • भारत सरकार',
     actTag: 'कायदा १९५२',
 
     tabDesk: 'नवीन नॉटरी नोंद',
@@ -273,7 +315,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     secugenSim: 'सिम्युलेटर मोड',
     webcamReady: 'कॅमेरा सज्ज',
 
-    deskTitle: 'ॲड. निलिमा सारंगा - नॉटरी कार्यकक्ष',
+    deskTitle: 'नॉटरी कार्यकक्ष',
     deskSubtitle: 'पायरी १: माहिती भरा → पायरी २: फोटो व सेकुजेन अंगठ्याचा ठसा घ्या → पायरी ३: प्रमाणपत्र प्रिंट करा व नोंदवहीत नोंदवा',
     fillDemoBtn: 'नमुना पक्षकार माहिती भरा',
     generatePrintBtn: 'प्रमाणपत्र तयार करा व प्रिंट करा (A4)',
@@ -381,10 +423,31 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     loginDemoCredentialsLabel: 'उपलब्ध डेमो खाती (ऑटोफिलसाठी क्लिक करा)',
     logoutBtn: 'लॉग आऊट',
     switchNotaryBtn: 'नॉटरी बदला',
+
+    // Email & OTP Authentication
+    loginEmailTab: 'ईमेल ओटीपी लॉगिन',
+    loginEmailLabel: 'अधिकृत नोंदणीकृत ईमेल आयडी',
+    loginEmailPlaceholder: 'advocate.name@gmail.com किंवा आपला ईमेल',
+    loginSendOtpBtn: '६-अंकी पडताळणी कोड पाठवा',
+    loginSendingOtp: 'सुरक्षित ओटीपी पाठवत आहे...',
+    loginOtpPrompt: 'या ईमेलवर पाठवलेला ६-अंकी अधिकृत पडताळणी कोड प्रविष्ट करा:',
+    loginOtpLabel: 'एकवेळचा पडताळणी कोड (OTP)',
+    loginVerifyOtpBtn: 'पडताळणी करा व दालनात प्रवेश करा',
+    loginVerifyingOtp: 'सुरक्षा टोकन तपासत आहे...',
+    loginResendOtpBtn: 'पुन्हा कोड पाठवा',
+    loginResendTimer: 'पुन्हा पाठवण्यासाठी वेळ:',
+    loginChangeEmailBtn: 'ईमेल बदला',
+    loginOtpInvalidError: 'अवैध किंवा चुकीचा ओटीपी कोड. कृपया वैध ६-अंकी कोड टाका.',
+    loginOtpExpiredError: 'सुरक्षा कोडची मुदत संपली आहे. कृपया नवीन ओटीपी मागवा.',
+    loginOtpAttemptsLeft: 'प्रयत्न शिल्लक',
+    loginOtpSimulatedBannerTitle: 'विधी व न्याय मंत्रालय / सुरक्षित ओटीपी डिस्पॅच (सिम्युलेटर)',
+    loginOtpSimulatedBannerDesc: 'अधिकृत नॉटरी दालन प्रवेशासाठी आपला एकवेळचा पडताळणी कोड आहे:',
+    loginQuickSelectAdvocate: 'नोंदणीकृत वकील निवडा:',
+    loginSecurityAuditNotice: 'पुरावा साखळी सक्रिय. सर्व प्रवेश नोंदी सुरक्षितपणे डिजिटल नोंदवहीत साठवल्या जातात.',
   },
   hi: {
     brandTitle: 'डिजिटल नोटरी डेस्क',
-    brandSubtitle: 'एडवोकेट नीलिमा सारंगा • पंजीकरण संख्या १५९६० / भारत सरकार',
+    brandSubtitle: 'आधिकारिक नोटरी पब्लिक • भारत सरकार',
     actTag: 'अधिनियम १९५२',
 
     tabDesk: 'नई नोटरी प्रविष्टि',
@@ -397,7 +460,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     secugenSim: 'सिम्युलेटर मोड',
     webcamReady: 'वेबकैम तैयार',
 
-    deskTitle: 'एडवोकेट नीलिमा सारंगा - नोटरी डेस्क',
+    deskTitle: 'नोटरी डेस्क',
     deskSubtitle: 'चरण १: विवरण भरें → चरण २: फ़ोटो व SecuGen अंगूठे का निशान लें → चरण ३: प्रमाणपत्र प्रिंट करें और प्रारूप १५ में दर्ज करें',
     fillDemoBtn: 'नमूना प्रविष्टि भरें',
     generatePrintBtn: 'प्रमाणपत्र तैयार व प्रिंट करें (A4)',
@@ -505,5 +568,26 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     loginDemoCredentialsLabel: 'उपलब्ध डेमो खाते (ऑटोफ़िल के लिए क्लिक करें)',
     logoutBtn: 'लॉग आउट',
     switchNotaryBtn: 'नोटरी बदलें',
+
+    // Email & OTP Authentication
+    loginEmailTab: 'ईमेल ओटीपी लॉगिन',
+    loginEmailLabel: 'आधिकारिक पंजीकृत ईमेल आईडी',
+    loginEmailPlaceholder: 'advocate.name@gmail.com या आपका ईमेल',
+    loginSendOtpBtn: '६-अंकीय सत्यापन कोड भेजें',
+    loginSendingOtp: 'सुरक्षित ओटीपी भेजा जा रहा है...',
+    loginOtpPrompt: 'इस ईमेल पर भेजा गया ६-अंकीय आधिकारिक सत्यापन कोड दर्ज करें:',
+    loginOtpLabel: 'एकमुश्त सत्यापन कोड (OTP)',
+    loginVerifyOtpBtn: 'सत्यापित करें व कार्यस्थल खोलें',
+    loginVerifyingOtp: 'सुरक्षा टोकन जांचा जा रहा है...',
+    loginResendOtpBtn: 'पुनः कोड भेजें',
+    loginResendTimer: 'पुनः भेजने हेतु समय:',
+    loginChangeEmailBtn: 'ईमेल बदलें',
+    loginOtpInvalidError: 'अमान्य या गलत ओटीपी कोड। कृपया सही ६-अंकीय कोड दर्ज करें।',
+    loginOtpExpiredError: 'सुरक्षा टोकन की समय सीमा समाप्त हो गई है। कृपया नया ओटीपी प्राप्त करें।',
+    loginOtpAttemptsLeft: 'प्रयास शेष',
+    loginOtpSimulatedBannerTitle: 'विधि एवं न्याय मंत्रालय / सुरक्षित ओटीपी प्रेषण (सिम्युलेटर)',
+    loginOtpSimulatedBannerDesc: 'आधिकारिक नोटरी कार्यस्थल प्रवेश हेतु आपका सत्यापन कोड है:',
+    loginQuickSelectAdvocate: 'पंजीकृत अधिवक्ता प्रोफ़ाइल चुनें:',
+    loginSecurityAuditNotice: 'साक्ष्य श्रृंखला सक्रिय। सभी लॉगिन प्रयास डिजिटल रूप से ऑडिट लॉग में दर्ज होते हैं।',
   },
 };

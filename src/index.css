@@ -1,7 +1,33 @@
+/* Kruti Dev 010 - Official Indian Court & Legal Typist Font */
+@font-face {
+  font-family: 'Kruti Dev 010';
+  src: local('Kruti Dev 010'), local('KrutiDev 010'), local('KrutiDev-010'), local('KrutiDev010'),
+       url('/fonts/KrutiDev010.woff2') format('woff2'),
+       url('/fonts/KrutiDev010.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'KrutiDev010';
+  src: local('Kruti Dev 010'), local('KrutiDev 010'), local('KrutiDev-010'), local('KrutiDev010'),
+       url('/fonts/KrutiDev010.woff2') format('woff2'),
+       url('/fonts/KrutiDev010.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-krutidev {
+  font-family: 'Kruti Dev 010', 'KrutiDev010', serif !important;
+}
+
 :root {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-krutidev: 'Kruti Dev 010', 'KrutiDev010', serif;
 
   /* Executive Red & White Legal Theme Palette */
   --color-primary: #0F172A; /* Deep ink slate */

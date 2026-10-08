@@ -123,3 +123,21 @@ export interface AccessRequest {
   notes?: string;
 }
 
+export interface EmailOtpSession {
+  email: string;
+  otp: string;
+  expiresAt: number;
+  attemptsLeft: number;
+  createdAt: number;
+}
+
+export interface AuthAuditEntry {
+  id: string;
+  timestamp: string;
+  email: string;
+  eventType: 'OTP_REQUESTED' | 'OTP_VERIFIED' | 'OTP_FAILED' | 'CREDENTIAL_LOGIN' | 'LOGOUT';
+  ipAddress: string;
+  status: 'SUCCESS' | 'FAILURE';
+  details: string;
+}
+

@@ -3,6 +3,7 @@ import type { NotarialAct, NotaryProfile, LegalDraft } from '../../types/notary'
 import type { Language } from '../../i18n/translations';
 import { StorageService } from '../../services/storageService';
 import { LEGAL_TEMPLATES, NOTARY_SNIPPETS } from '../../services/templateService';
+import { KrutiDevService } from '../../services/krutiDevService';
 import {
   Bold,
   Italic,
@@ -31,6 +32,9 @@ import {
   UserCheck,
   Scale,
   FileText,
+  Languages,
+  ArrowLeftRight,
+  Type,
 } from 'lucide-react';
 
 interface NotaryDocumentEditorProps {
@@ -62,6 +66,15 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
   const [isItalic, setIsItalic] = useState<boolean>(false);
   const [isUnderline, setIsUnderline] = useState<boolean>(false);
   const [alignment, setAlignment] = useState<'left' | 'center' | 'right' | 'justify'>('justify');
+
+  // Kruti Dev 010 Toolbox & Converter State
+  const [showKrutiModal, setShowKrutiModal] = useState<boolean>(false);
+  const [krutiTab, setKrutiTab] = useState<'converter' | 'document' | 'keymap'>('converter');
+  const [krutiUnicodeInput, setKrutiUnicodeInput] = useState<string>('');
+  const [krutiOutput, setKrutiOutput] = useState<string>('');
+  const [krutiPreviewFont, setKrutiPreviewFont] = useState<boolean>(true);
+  const [krutiCopied, setKrutiCopied] = useState<boolean>(false);
+  const [krutiTypingTest, setKrutiTypingTest] = useState<string>('eSa \'kiFkiwoZd c;ku djrk gw¡A');
 
   // Stats
   const [stats, setStats] = useState({ words: 0, characters: 0, paragraphs: 1 });
@@ -245,6 +258,111 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
     }
   };
 
+  // Kruti Dev Conversion and Assistant Helpers
+  const handleConvertUnicodeToKruti = () => {
+    const res = KrutiDevService.unicodeToKrutiDev(krutiUnicodeInput);
+    setKrutiOutput(res);
+  };
+
+  const handleConvertKrutiToUnicode = () => {
+    const res = KrutiDevService.krutiDevToUnicode(krutiUnicodeInput);
+    setKrutiOutput(res);
+  };
+
+  const handleSwapKruti = () => {
+    const temp = krutiUnicodeInput;
+    setKrutiUnicodeInput(krutiOutput);
+    setKrutiOutput(temp);
+  };
+
+  const handleCopyKrutiOutput = () => {
+    navigator.clipboard.writeText(krutiOutput);
+    setKrutiCopied(true);
+    setTimeout(() => setKrutiCopied(false), 2000);
+  };
+
+  const handleInsertKrutiAtCursor = (text: string) => {
+    if (!text) return;
+    setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+    const formatted = `<span style="font-family: 'Kruti Dev 010', 'KrutiDev010', serif;">${text.replace(/\n/g, '<br/>')}</span>`;
+    insertHtmlAtCursor(formatted);
+    setShowKrutiModal(false);
+  };
+
+  const handleConvertSelectionToKruti = () => {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || sel.isCollapsed) {
+      alert('कृपया संपादकात प्रथम मजकूर निवडा (Please select text in the editor first)');
+      return;
+    }
+    const selectedText = sel.toString();
+    const converted = KrutiDevService.unicodeToKrutiDev(selectedText);
+    document.execCommand('insertHTML', false, `<span style="font-family: 'Kruti Dev 010', 'KrutiDev010', serif;">${converted}</span>`);
+    if (editorRef.current) pushHistory(editorRef.current.innerHTML);
+    updateStats();
+  };
+
+  const handleConvertSelectionToUnicode = () => {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || sel.isCollapsed) {
+      alert('कृपया संपादकात प्रथम मजकूर निवडा (Please select text in the editor first)');
+      return;
+    }
+    const selectedText = sel.toString();
+    const converted = KrutiDevService.krutiDevToUnicode(selectedText);
+    document.execCommand('insertHTML', false, converted);
+    if (editorRef.current) pushHistory(editorRef.current.innerHTML);
+    updateStats();
+  };
+
+  const handleConvertDocumentToKruti = () => {
+    if (!editorRef.current) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = currentHtml;
+
+    const convertNode = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeValue && node.nodeValue.trim()) {
+          node.nodeValue = KrutiDevService.unicodeToKrutiDev(node.nodeValue);
+        }
+      } else {
+        node.childNodes.forEach(convertNode);
+      }
+    };
+
+    convertNode(tempDiv);
+    editorRef.current.innerHTML = tempDiv.innerHTML;
+    setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+    pushHistory(editorRef.current.innerHTML);
+    updateStats();
+    setShowKrutiModal(false);
+  };
+
+  const handleConvertDocumentToUnicode = () => {
+    if (!editorRef.current) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = currentHtml;
+
+    const convertNode = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeValue && node.nodeValue.trim()) {
+          node.nodeValue = KrutiDevService.krutiDevToUnicode(node.nodeValue);
+        }
+      } else {
+        node.childNodes.forEach(convertNode);
+      }
+    };
+
+    convertNode(tempDiv);
+    editorRef.current.innerHTML = tempDiv.innerHTML;
+    setFontFamily('Noto Sans Devanagari, Mangal');
+    pushHistory(editorRef.current.innerHTML);
+    updateStats();
+    setShowKrutiModal(false);
+  };
+
   // Load a chosen Template
   const handleLoadTemplate = (templateId: string) => {
     const tmpl = LEGAL_TEMPLATES.find((t) => t.id === templateId);
@@ -255,6 +373,9 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
       editorRef.current.innerHTML = generated;
       setDocTitle(tmpl.title);
       setSelectedTemplateId(templateId);
+      if (templateId === 'krutidev-court-affidavit') {
+        setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+      }
       pushHistory(generated);
       updateStats();
       setSaveStatus('Template Loaded');
@@ -323,6 +444,7 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
     const cleanFileName = docTitle.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'Notary-Legal-Draft';
     const content = editorRef.current?.innerHTML || '';
     const topMargin = '25mm';
+    const isKruti = fontFamily.includes('Kruti') || content.includes('Kruti');
 
     const wordHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -339,17 +461,24 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
   </xml>
   <![endif]-->
   <style>
+    @font-face {
+      font-family: 'Kruti Dev 010';
+      src: local('Kruti Dev 010'), local('KrutiDev010'), local('KrutiDev-010');
+    }
     @page {
       size: A4 portrait;
       margin: ${topMargin} 20mm 20mm 20mm;
       mso-page-orientation: portrait;
     }
     body {
-      font-family: 'Times New Roman', serif;
-      font-size: 12pt;
-      line-height: 1.6;
+      font-family: ${isKruti ? "'Kruti Dev 010', 'KrutiDev010', 'Times New Roman', serif" : `${fontFamily}, 'Times New Roman', serif`};
+      font-size: ${fontSize || '12pt'};
+      line-height: ${lineHeight || '1.6'};
       color: #000000;
       text-align: justify;
+    }
+    .font-krutidev {
+      font-family: 'Kruti Dev 010', 'KrutiDev010', serif !important;
     }
     h2 { font-size: 16pt; text-align: center; text-transform: uppercase; }
     table { width: 100%; border-collapse: collapse; }
@@ -441,7 +570,7 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
                 {saveStatus}
               </span>
               <span>•</span>
-              <span>Adv. Nileema Saranga</span>
+              <span>{profile?.notaryName || 'Advocate & Notary Public'}</span>
             </div>
           </div>
         </div>
@@ -660,6 +789,52 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
           >
             {lang === 'mr' ? '+ तारीख' : lang === 'hi' ? '+ तिथि' : '+ Date'}
           </button>
+
+          {/* Kruti Dev Jurat Pill */}
+          <button
+            type="button"
+            className="snippet-pill"
+            style={{ borderLeft: '2px solid #D97706' }}
+            onClick={() => {
+              setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+              insertHtmlAtCursor(NOTARY_SNIPPETS.krutiDevJuratClause(profile, activeAct));
+            }}
+            title="Insert Notary Attestation Jurat clause in Kruti Dev 010 font"
+          >
+            <Scale size={12} color="#D97706" />
+            <span>+ कृतिदेव जुराट</span>
+          </button>
+
+          {/* Kruti Dev Verification Pill */}
+          <button
+            type="button"
+            className="snippet-pill"
+            style={{ borderLeft: '2px solid #D97706' }}
+            onClick={() => {
+              setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+              insertHtmlAtCursor(NOTARY_SNIPPETS.krutiDevVerificationClause(profile, activeAct?.date));
+            }}
+            title="Insert Verification clause in Kruti Dev 010 font"
+          >
+            <span>+ कृतिदेव सत्यापन</span>
+          </button>
+
+          {/* Kruti Dev Toolbox Pill */}
+          <button
+            type="button"
+            className="snippet-pill"
+            style={{
+              backgroundColor: '#FEF3C7',
+              borderColor: '#F59E0B',
+              color: '#92400E',
+              fontWeight: 700,
+            }}
+            onClick={() => setShowKrutiModal(true)}
+            title="Open Kruti Dev 010 Converter & Typist Assistant"
+          >
+            <Languages size={13} />
+            <span>कृतिदेव ०१० टूलबॉक्स</span>
+          </button>
         </div>
       </div>
 
@@ -697,11 +872,33 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
             title="Font Family"
           >
             <option value="Times New Roman">Times New Roman (Court Default)</option>
+            <option value="'Kruti Dev 010', 'KrutiDev010', serif">कृतिदेव 010 (Kruti Dev - Court Font)</option>
             <option value="Calibri">Calibri</option>
             <option value="Arial">Arial</option>
             <option value="Georgia">Georgia</option>
-            <option value="Noto Sans Devanagari, Mangal">मराठी / Devanagari</option>
+            <option value="Noto Sans Devanagari, Mangal">मराठी / Devanagari (Unicode)</option>
           </select>
+
+          <button
+            type="button"
+            className="toolbar-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '0 8px',
+              backgroundColor: fontFamily.includes('Kruti') ? '#FEF3C7' : 'transparent',
+              borderColor: fontFamily.includes('Kruti') ? '#F59E0B' : '#E2E8F0',
+              color: fontFamily.includes('Kruti') ? '#92400E' : '#334155',
+              fontWeight: 600,
+              fontSize: '0.78rem',
+            }}
+            onClick={() => setShowKrutiModal(true)}
+            title="कृतिदेव ०१० कनवर्टर व टूलबॉक्स (Open Kruti Dev 010 Assistant)"
+          >
+            <Languages size={14} color={fontFamily.includes('Kruti') ? '#D97706' : '#64748B'} />
+            <span>कृतिदेव</span>
+          </button>
         </div>
 
         {/* Font Size Selector */}
@@ -904,6 +1101,578 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
           <span>Alignment: <strong>{alignment.toUpperCase()}</strong></span>
         </div>
       </div>
+
+      {/* 6. KRUTI DEV 010 CONVERTER & ASSISTANT MODAL */}
+      {showKrutiModal && (
+        <div
+          className="modal-backdrop no-print"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowKrutiModal(false);
+          }}
+        >
+          <div
+            className="kruti-modal-dialog"
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
+              width: '100%',
+              maxWidth: '850px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              border: '1px solid #E2E8F0',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid #E2E8F0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+                color: '#FFFFFF',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    backgroundColor: '#F59E0B',
+                    color: '#1E293B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                  }}
+                >
+                  कृ
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF' }}>
+                    कृतिदेव ०१० कनवर्टर व टायपिस्ट टूलबॉक्स (Kruti Dev 010 Assistant)
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                    Indian District & High Court Non-Unicode Font Converter & Affidavit Drafter
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setShowKrutiModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Tabs Navigation */}
+            <div
+              style={{
+                display: 'flex',
+                borderBottom: '1px solid #E2E8F0',
+                backgroundColor: '#F8FAFC',
+                padding: '0 1.25rem',
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: 'none',
+                  background: 'none',
+                  borderBottom: krutiTab === 'converter' ? '2px solid #F59E0B' : '2px solid transparent',
+                  color: krutiTab === 'converter' ? '#B45309' : '#64748B',
+                  fontWeight: krutiTab === 'converter' ? 700 : 500,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onClick={() => setKrutiTab('converter')}
+              >
+                <Languages size={15} />
+                <span>द्वि-मार्गी कनवर्टर (Converter)</span>
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: 'none',
+                  background: 'none',
+                  borderBottom: krutiTab === 'document' ? '2px solid #F59E0B' : '2px solid transparent',
+                  color: krutiTab === 'document' ? '#B45309' : '#64748B',
+                  fontWeight: krutiTab === 'document' ? 700 : 500,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onClick={() => setKrutiTab('document')}
+              >
+                <FileText size={15} />
+                <span>थेट दस्तऐवज रूपांतरण (Doc Actions)</span>
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: 'none',
+                  background: 'none',
+                  borderBottom: krutiTab === 'keymap' ? '2px solid #F59E0B' : '2px solid transparent',
+                  color: krutiTab === 'keymap' ? '#B45309' : '#64748B',
+                  fontWeight: krutiTab === 'keymap' ? 700 : 500,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+                onClick={() => setKrutiTab('keymap')}
+              >
+                <Type size={15} />
+                <span>कीबोर्ड मॅप व टायपिंग (Keymap & Test)</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '1.25rem', overflowY: 'auto', flex: 1 }}>
+              {/* TAB 1: CONVERTER */}
+              {krutiTab === 'converter' && (
+                <div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '1rem',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    {/* Unicode Input Box */}
+                    <div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '0.4rem',
+                        }}
+                      >
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          युनिकोड देवनागरी (Unicode Hindi / Marathi):
+                        </label>
+                        <button
+                          type="button"
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            color: '#2563EB',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                          }}
+                          onClick={() =>
+                            setKrutiUnicodeInput(
+                              'शपथ पत्र\nसमक्ष : श्रीमान नोटरी पब्लिक महोदय\nमैं शपथपूर्वक बयान करता हूँ कि मैं भारत का मूल निवासी हूँ एवं समस्त कथन सत्य व सही हैं।'
+                            )
+                          }
+                        >
+                          नमुना भरा (Sample)
+                        </button>
+                      </div>
+                      <textarea
+                        value={krutiUnicodeInput}
+                        onChange={(e) => setKrutiUnicodeInput(e.target.value)}
+                        placeholder="येथे युनिकोड मराठी किंवा हिंदी मजकूर टाइप करा किंवा पेस्ट करा..."
+                        style={{
+                          width: '100%',
+                          height: '210px',
+                          padding: '0.65rem',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '0.9rem',
+                          fontFamily: 'Noto Sans Devanagari, Mangal, sans-serif',
+                          lineHeight: 1.5,
+                          resize: 'vertical',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+
+                    {/* Kruti Dev Output Box */}
+                    <div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '0.4rem',
+                        }}
+                      >
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                          कृतिदेव ०१० (Kruti Dev 010):
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '0.75rem',
+                            color: '#64748B',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={krutiPreviewFont}
+                            onChange={(e) => setKrutiPreviewFont(e.target.checked)}
+                          />
+                          <span>कृतिदेव फॉन्ट प्रिव्ह्यू</span>
+                        </label>
+                      </div>
+                      <textarea
+                        value={krutiOutput}
+                        onChange={(e) => setKrutiOutput(e.target.value)}
+                        placeholder="येथे रूपांतरित झालेला मजकूर दिसेल..."
+                        style={{
+                          width: '100%',
+                          height: '210px',
+                          padding: '0.65rem',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: krutiPreviewFont ? '1.1rem' : '0.88rem',
+                          fontFamily: krutiPreviewFont
+                            ? "'Kruti Dev 010', 'KrutiDev010', serif"
+                            : 'monospace',
+                          lineHeight: 1.5,
+                          backgroundColor: '#F8FAFC',
+                          resize: 'vertical',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Converter Action Toolbar */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#FEF3C7',
+                      borderRadius: '8px',
+                      border: '1px solid #FDE68A',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        style={{ backgroundColor: '#D97706', borderColor: '#B45309' }}
+                        onClick={handleConvertUnicodeToKruti}
+                      >
+                        <span>युनिकोड ➔ कृतिदेव</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleConvertKrutiToUnicode}
+                      >
+                        <span>कृतिदेव ➔ युनिकोड</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleSwapKruti}
+                        title="Swap Input and Output text"
+                      >
+                        <ArrowLeftRight size={13} />
+                        <span>अदलाबदल (Swap)</span>
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleCopyKrutiOutput}
+                        disabled={!krutiOutput}
+                      >
+                        {krutiCopied ? <Check size={14} color="#059669" /> : <Copy size={14} />}
+                        <span>{krutiCopied ? 'कॉपी झाले!' : 'कॉपी (Copy)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={!krutiOutput}
+                        onClick={() => handleInsertKrutiAtCursor(krutiOutput)}
+                        title="Insert this text directly at current cursor in the document"
+                      >
+                        <span>+ कर्सरवर जोडा (Insert at Cursor)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: DOCUMENT ACTIONS */}
+              {krutiTab === 'document' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div
+                    style={{
+                      padding: '1rem',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      backgroundColor: '#FFFFFF',
+                    }}
+                  >
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.92rem', color: '#1E293B' }}>
+                      १. निवडलेल्या मजकुराचे रूपांतरण (Convert Selected Text)
+                    </h4>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: '#64748B' }}>
+                      संपादकात जो मजकूर तुम्ही सिलेक्ट (हायलाइट) केला आहे, तो एका क्लिकवर कृतिदेव किंवा युनिकोडमध्ये बदला.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={handleConvertSelectionToKruti}
+                      >
+                        निवडलेला मजकूर ➔ कृतिदेव ०१०
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={handleConvertSelectionToUnicode}
+                      >
+                        निवडलेला मजकूर ➔ युनिकोड
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: '1rem',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      backgroundColor: '#FFFFFF',
+                    }}
+                  >
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.92rem', color: '#1E293B' }}>
+                      २. संपूर्ण दस्तऐवजाचे रूपांतरण (Convert Entire Document)
+                    </h4>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: '#64748B' }}>
+                      सध्या उघडा असलेला पूर्ण मसुदा कृतिदेव ०१० मध्ये रूपांतरित करा आणि फॉन्ट स्वयंचलितरित्या Kruti Dev 010 वर सेट करा.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        style={{ backgroundColor: '#D97706', borderColor: '#B45309' }}
+                        onClick={handleConvertDocumentToKruti}
+                      >
+                        संपूर्ण दस्तऐवज ➔ कृतिदेव ०१० करा
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-secondary"
+                        onClick={handleConvertDocumentToUnicode}
+                      >
+                        संपूर्ण दस्तऐवज ➔ युनिकोड करा
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: '1rem',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      backgroundColor: '#FFFFFF',
+                    }}
+                  >
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.92rem', color: '#1E293B' }}>
+                      ३. न्यायालयीन कृतिदेव शपथपत्र लोड करा (Load Court Kruti Dev Template)
+                    </h4>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: '#64748B' }}>
+                      भारतीय जिल्हा व उच्च न्यायालयातील स्टॅंडर्ड फॉरमॅटनुसार तयार केलेले पूर्ण शपथपत्र लोड करा.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => {
+                        handleLoadTemplate('krutidev-court-affidavit');
+                        setShowKrutiModal(false);
+                      }}
+                    >
+                      <FilePlus size={13} />
+                      <span>नमुना शपथपत्र लोड करा (Load Kruti Dev Template)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: KEYMAP & TYPING TEST */}
+              {krutiTab === 'keymap' && (
+                <div>
+                  <div
+                    style={{
+                      padding: '0.75rem',
+                      backgroundColor: '#F1F5F9',
+                      borderRadius: '8px',
+                      marginBottom: '1rem',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.5rem', color: '#1E293B' }}>
+                      कृतिदेव ०१० कीबोर्ड जलद संदर्भ (Kruti Dev Quick Key Reference):
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: '0.4rem',
+                        fontSize: '0.76rem',
+                      }}
+                    >
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>d</code> = क, <code>[k</code> = ख
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>x</code> = ग, <code>?k</code> = घ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>p</code> = च, <code>N</code> = छ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>t</code> = ज, <code>T</code> = झ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>V</code> = ट, <code>B</code> = ठ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>M</code> = ड, <code>&lt;</code> = ढ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>r</code> = त, <code>Fk</code> = थ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>n</code> = द, <code>/k</code> = ध
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>u</code> = न, <code>i</code> = प
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>Q</code> = फ, <code>c</code> = ब
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>Hk</code> = भ, <code>e</code> = म
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>;</code> = य, <code>j</code> = र
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>y</code> = ल, <code>o</code> = व
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>'k</code> = श, <code>l</code> = स
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>k</code> = ा (काना), <code>f</code> = ि
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>h</code> = ी, <code>q</code> = ु, <code>w</code> = ू
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>s</code> = े, <code>S</code> = ै, <code>a</code> = ं
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>Z</code> = र् (रेफ), <code>ç</code> = ्र
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>|</code> = श्र, <code>&#123;</code> = ज्ञ
+                      </div>
+                      <div style={{ background: '#fff', padding: '4px 6px', borderRadius: '4px' }}>
+                        <code>A</code> = । (पूर्णविराम)
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Typing Sandbox */}
+                  <div>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.35rem' }}>
+                      थेट टायपिंग चाचणी (Live Kruti Dev Typing Test Box):
+                    </label>
+                    <textarea
+                      value={krutiTypingTest}
+                      onChange={(e) => setKrutiTypingTest(e.target.value)}
+                      placeholder="येथे कृतिदेव कीबोर्डने थेट टाइप करून पहा..."
+                      style={{
+                        width: '100%',
+                        height: '110px',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        border: '1.5px solid #F59E0B',
+                        fontSize: '1.25rem',
+                        fontFamily: "'Kruti Dev 010', 'KrutiDev010', serif",
+                        lineHeight: 1.6,
+                        backgroundColor: '#FFFBEB',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                        टीप: वरील बॉक्समध्ये थेट कृतिदेव ०१० फॉन्टमध्ये अक्षरे उमटतील.
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => handleInsertKrutiAtCursor(krutiTypingTest)}
+                      >
+                        + संपादकात घाला (Insert into Document)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

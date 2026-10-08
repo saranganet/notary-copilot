@@ -81,7 +81,8 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Adv_Nileema_Saranga_Notary_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    const safeName = (profile.notaryName || 'Notary').replace(/[^a-zA-Z0-9]/g, '_');
+    link.download = `${safeName}_Backup_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -176,7 +177,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
           Notary Profile & Device Settings
         </h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-          Official credentials for Advocate Nileema Saranga, chamber address, stamping preference, and SecuGen hardware diagnostics
+          Official credentials for {profile.notaryName || 'Notary Public'}, chamber address, stamping preference, and SecuGen hardware diagnostics
         </p>
       </div>
 
@@ -206,7 +207,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
                 className="form-input"
                 value={formData.firmName}
                 onChange={(e) => handleChange('firmName', e.target.value)}
-                placeholder="e.g. Advocate Nileema Saranga"
+                placeholder="e.g. Chambers / Legal Associates"
                 required
               />
             </div>
@@ -218,7 +219,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
                 className="form-input"
                 value={formData.notaryName}
                 onChange={(e) => handleChange('notaryName', e.target.value)}
-                placeholder="Adv. Nileema Saranga"
+                placeholder="e.g. Adv. Full Name"
                 required
               />
             </div>
@@ -289,7 +290,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
                 className="form-input"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="adv.nileemasaranga@gmail.com"
+                placeholder="e.g. notary@domain.in"
               />
             </div>
           </div>
@@ -300,7 +301,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
           <div className="card-header">
             <div>
               <h2 className="card-title">Stamping & Signing Workflow</h2>
-              <p className="card-subtitle">Designed for Adv. Nileema Saranga's authentic brass seal and ink signature</p>
+              <p className="card-subtitle">Designed for {profile.notaryName || 'the Notary'}'s authentic brass seal and ink signature</p>
             </div>
           </div>
 
@@ -311,7 +312,7 @@ export const NotarySettings: React.FC<NotarySettingsProps> = ({
                 Physical Brass Seal & Ink Signature Mode
               </div>
               <p style={{ fontSize: '0.82rem', color: '#7F1D1D', marginTop: '4px', lineHeight: '1.4' }}>
-                When enabled, the printed Notary Certificate prints with high-contrast guided circular and rectangular stamping boxes so Adv. Nileema Saranga can stamp her authentic brass seal and sign in ink before the client.
+                When enabled, the printed Notary Certificate prints with high-contrast guided circular and rectangular stamping boxes so {profile.notaryName || 'the Notary'} can stamp their authentic brass seal and sign in ink before the client.
               </p>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>
                 <input

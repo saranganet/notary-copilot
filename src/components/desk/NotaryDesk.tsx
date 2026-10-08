@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type {
   NotarialAct,
   NotaryProfile,
@@ -34,14 +34,30 @@ interface NotaryDeskProps {
 }
 
 export const NotaryDesk: React.FC<NotaryDeskProps> = ({
+  profile,
   lang = 'en',
   onViewCertificate,
   onActSaved,
 }) => {
   const t = TRANSLATIONS[lang];
 
-  // Generate next serial number (editable and auto-incremented)
-  const [serialNo, setSerialNo] = useState<string>(() => StorageService.getNextSerialNo());
+  // Dynamic desk heading tailored to the active logged-in notary
+  const deskHeading = profile?.notaryName
+    ? lang === 'mr'
+      ? `${profile.notaryName} - नॉटरी कार्यकक्ष`
+      : lang === 'hi'
+      ? `${profile.notaryName} - नोटरी डेस्क`
+      : `${profile.notaryName}'s Notary Desk`
+    : t.deskTitle;
+
+  // Generate next serial number (editable and auto-incremented for active chamber)
+  const [serialNo, setSerialNo] = useState<string>(() => StorageService.getNextSerialNo(profile));
+
+  // Sync serial number whenever logged-in profile changes
+  useEffect(() => {
+    setSerialNo(StorageService.getNextSerialNo(profile));
+  }, [profile]);
+
   const [date, setDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
   const [docType, setDocType] = useState<DocumentType>('Rental Agreement');
   const [customTitle, setCustomTitle] = useState<string>(
@@ -57,7 +73,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
   const [pageNo, setPageNo] = useState<number>(28);
 
   const handleResetToNewEntry = () => {
-    setSerialNo(StorageService.getNextSerialNo());
+    setSerialNo(StorageService.getNextSerialNo(profile));
     setDate(new Date().toISOString().split('T')[0]);
     setDocType('Rental Agreement');
     setCustomTitle(
@@ -387,7 +403,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
 
     return {
       id: 'act-' + Date.now(),
-      serialNo: serialNo.trim() || StorageService.getNextSerialNo(),
+      serialNo: serialNo.trim() || StorageService.getNextSerialNo(profile),
       date,
       documentType: docType,
       customDocumentTitle: finalDocTitle,
@@ -405,11 +421,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
 
   const handleSaveAndPrint = () => {
     const act = constructAct();
-    StorageService.saveAct(act);
+    StorageService.saveAct(act, profile);
     onActSaved(act);
     onViewCertificate(act);
     // Advance serialNo for next entry
-    setSerialNo(StorageService.getNextSerialNo());
+    setSerialNo(StorageService.getNextSerialNo(profile));
   };
 
   return (
@@ -428,7 +444,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
         <div>
           <h1 style={{ fontSize: '1.6rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <FileCheck size={28} color="var(--color-seal-red)" />
-            {t.deskTitle}
+            {deskHeading}
           </h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
             {t.deskSubtitle}
