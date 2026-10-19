@@ -13,6 +13,9 @@ interface NotaryCertificateProps {
   onToggleLang?: () => void;
   onBack?: () => void;
   onUpdateAct?: (updated: NotarialAct) => void;
+  availableActs?: NotarialAct[];
+  onSelectAct?: (act: NotarialAct) => void;
+  onOpenVerification?: (act: NotarialAct, profile: NotaryProfile) => void;
 }
 
 export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
@@ -22,6 +25,9 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
   onToggleLang,
   onBack,
   onUpdateAct,
+  availableActs,
+  onSelectAct,
+  onOpenVerification,
 }) => {
   const [bookNo, setBookNo] = useState<number>(act.bookNo || 1);
   const [pageNo, setPageNo] = useState<number>(act.pageNo || 28);
@@ -29,6 +35,11 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
   const [verificationUrl, setVerificationUrl] = useState<string>('');
 
   const t = TRANSLATIONS[lang];
+
+  useEffect(() => {
+    setBookNo(act.bookNo || 1);
+    setPageNo(act.pageNo || 28);
+  }, [act.id, act.bookNo, act.pageNo]);
 
   useEffect(() => {
     const url = QrVerificationService.generateVerificationUrl(act, profile);
@@ -123,13 +134,61 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               {t.certBackBtn}
             </button>
           )}
-          <div>
-            <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>
-              {t.certRegSerialNo}: {act.serialNo}
-            </span>
-            <span style={{ fontSize: '0.8rem', color: '#94A3B8', marginLeft: '0.75rem' }}>
-              {act.customDocumentTitle || act.documentType}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            {availableActs && availableActs.length > 1 && onSelectAct ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#94A3B8' }}>{t.certRegSerialNo}:</span>
+                <select
+                  value={act.id}
+                  onChange={(e) => {
+                    const found = availableActs.find((a) => a.id === e.target.value);
+                    if (found) onSelectAct(found);
+                  }}
+                  style={{
+                    background: '#1E293B',
+                    color: '#F8FAFC',
+                    border: '1px solid #475569',
+                    borderRadius: '4px',
+                    padding: '3px 8px',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {availableActs.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.serialNo} • {a.customDocumentTitle || a.documentType}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                  {t.certRegSerialNo}: {act.serialNo}
+                </span>
+                <span style={{ fontSize: '0.8rem', color: '#94A3B8', marginLeft: '0.75rem' }}>
+                  {act.customDocumentTitle || act.documentType}
+                </span>
+              </div>
+            )}
+
+            {act.id === 'sample-preview-act' && (
+              <span
+                style={{
+                  background: '#FEF3C7',
+                  color: '#92400E',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  border: '1px solid #FCD34D',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                {lang === 'mr' ? 'नमुना पूर्वावलोकन (Sample Preview)' : lang === 'hi' ? 'नमूना पूर्वावलोकन (Sample Preview)' : 'Sample Preview Mode'}
+              </span>
+            )}
           </div>
         </div>
 
@@ -202,17 +261,22 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
           )}
 
           {verificationUrl && (
-            <a
-              href={verificationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
               className="btn btn-secondary"
-              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              onClick={() => {
+                if (onOpenVerification) {
+                  onOpenVerification(act, profile);
+                } else {
+                  window.open(verificationUrl, '_blank');
+                }
+              }}
+              style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
               title="Open public verification page as seen by citizens or authorities"
             >
               <QrCode size={16} color="#B91C1C" />
               <span>Verify Online (QR Preview)</span>
-            </a>
+            </button>
           )}
 
           <button className="btn btn-seal" onClick={handlePrint} style={{ fontWeight: 700 }}>
@@ -549,10 +613,16 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               {qrCodeDataUrl ? (
                 <a
                   href={verificationUrl}
+                  onClick={(e) => {
+                    if (onOpenVerification) {
+                      e.preventDefault();
+                      onOpenVerification(act, profile);
+                    }
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Click or scan with camera to view on Notary Co-Pilot portal"
-                  style={{ textDecoration: 'none', display: 'block' }}
+                  style={{ textDecoration: 'none', display: 'block', cursor: 'pointer' }}
                 >
                   <img
                     src={qrCodeDataUrl}

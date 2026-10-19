@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { NotarialAct, NotaryProfile, LegalDraft } from '../../types/notary';
 import type { Language } from '../../i18n/translations';
 import { StorageService } from '../../services/storageService';
-import { LEGAL_TEMPLATES, NOTARY_SNIPPETS } from '../../services/templateService';
+import { NOTARY_SNIPPETS } from '../../services/templateService';
 import { KrutiDevService } from '../../services/krutiDevService';
 import {
   Bold,
@@ -23,7 +23,6 @@ import {
   Copy,
   Check,
   RotateCcw,
-  Sparkles,
   FilePlus,
   Save,
   Trash2,
@@ -48,8 +47,7 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
 
   // Active Draft State
   const [draftId, setDraftId] = useState<string>(() => `draft-${Date.now()}`);
-  const [docTitle, setDocTitle] = useState<string>('General Affidavit - Solemn Affirmation');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(LEGAL_TEMPLATES[0].id);
+  const [docTitle, setDocTitle] = useState<string>('Untitled Legal Draft');
   const [selectedActId, setSelectedActId] = useState<string>(acts[0]?.id || '');
   const [savedDrafts, setSavedDrafts] = useState<LegalDraft[]>(() => StorageService.getDrafts());
   
@@ -84,7 +82,24 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
   const historyIndex = useRef<number>(-1);
   const isUndoRedoAction = useRef<boolean>(false);
 
-  const activeAct = acts.find((a) => a.id === selectedActId) || acts[0];
+  const defaultEmptyAct: NotarialAct = {
+    id: '',
+    serialNo: '[Notarial Serial No.]',
+    date: new Date().toISOString().split('T')[0],
+    documentType: 'General Affidavit',
+    customDocumentTitle: '',
+    parties: [],
+    feesCharged: 0,
+    stampValue: 100,
+    bookNo: 1,
+    pageNo: 1,
+    watermark: 'Preview',
+    verifiedToken: '',
+    createdAt: new Date().toISOString(),
+    status: 'Draft',
+  };
+
+  const activeAct = acts.find((a) => a.id === selectedActId) || acts[0] || defaultEmptyAct;
 
   // Calculate statistics
   const updateStats = useCallback(() => {
@@ -128,18 +143,32 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
   useEffect(() => {
     // Check if there is an autosaved current draft
     const current = StorageService.getCurrentDraft();
-    if (current && editorRef.current) {
+    const isDemoDraft =
+      current &&
+      (current.contentHtml.includes('Rajesh Patil') ||
+        current.contentHtml.includes('NS-2026-0018') ||
+        current.contentHtml.includes('Sanjay Deshmukh') ||
+        current.contentHtml.includes('Gandhi Chowk') ||
+        current.contentHtml.includes('984211223344') ||
+        current.title.includes('General Affidavit - Solemn Affirmation') ||
+        current.contentHtml.includes('ATTESTATION BY NOTARY PUBLIC (GOVT. OF INDIA)'));
+
+    if (current && !isDemoDraft && editorRef.current) {
       setDraftId(current.id);
       setDocTitle(current.title);
       editorRef.current.innerHTML = current.contentHtml;
       pushHistory(current.contentHtml);
       updateStats();
     } else if (editorRef.current) {
-      // Load default template with current act data
-      const defaultHtml = LEGAL_TEMPLATES[0].generateHtml(activeAct, profile);
-      editorRef.current.innerHTML = defaultHtml;
-      pushHistory(defaultHtml);
+      // Load clean blank canvas
+      const blankHtml = '<p><br></p>';
+      editorRef.current.innerHTML = blankHtml;
+      setDocTitle('Untitled Legal Draft');
+      pushHistory(blankHtml);
       updateStats();
+      if (isDemoDraft) {
+        StorageService.clearCurrentDraft();
+      }
     }
   }, []);
 
@@ -363,24 +392,6 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
     setShowKrutiModal(false);
   };
 
-  // Load a chosen Template
-  const handleLoadTemplate = (templateId: string) => {
-    const tmpl = LEGAL_TEMPLATES.find((t) => t.id === templateId);
-    if (!tmpl) return;
-
-    if (editorRef.current) {
-      const generated = tmpl.generateHtml(activeAct, profile);
-      editorRef.current.innerHTML = generated;
-      setDocTitle(tmpl.title);
-      setSelectedTemplateId(templateId);
-      if (templateId === 'krutidev-court-affidavit') {
-        setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
-      }
-      pushHistory(generated);
-      updateStats();
-      setSaveStatus('Template Loaded');
-    }
-  };
 
   // Save to Draft Library
   const handleSaveToLibrary = () => {
@@ -423,15 +434,15 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
   const handleNewDocument = () => {
     const newId = `draft-${Date.now()}`;
     setDraftId(newId);
-    setDocTitle('New Legal Draft');
+    setDocTitle('Untitled Legal Draft');
     if (editorRef.current) {
-      const blankTmpl = LEGAL_TEMPLATES.find((t) => t.id === 'blank-document');
-      const content = blankTmpl ? blankTmpl.generateHtml(activeAct, profile) : '<p>Type or paste here...</p>';
+      const content = '<p><br></p>';
       editorRef.current.innerHTML = content;
       pushHistory(content);
       updateStats();
+      StorageService.clearCurrentDraft();
     }
-    setSaveStatus('New Draft');
+    setSaveStatus('New Blank Draft');
   };
 
   // Print Document
@@ -689,42 +700,40 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
 
       {/* 2. LEGAL SNIPPETS & DATA INTEGRATION DECK (No-Print) */}
       <div className="notary-quick-deck no-print">
-        {/* Template Selector */}
+        {/* Document Action & Client Case Linker */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span className="deck-label">
-            <Sparkles size={14} color="var(--color-accent)" />
-            <strong>{lang === 'mr' ? 'कायदेशीर नमुना:' : lang === 'hi' ? 'विधिक प्रारूप:' : 'Legal Template:'}</strong>
-          </span>
-          <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: '240px', padding: '0.3rem 0.75rem', fontSize: '0.82rem' }}
-            value={selectedTemplateId}
-            onChange={(e) => handleLoadTemplate(e.target.value)}
+          <button
+            type="button"
+            className="btn btn-sm btn-secondary"
+            onClick={handleNewDocument}
+            title="Create a new blank document"
+            style={{ fontSize: '0.8rem', padding: '0.3rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            {LEGAL_TEMPLATES.map((t) => (
-              <option key={t.id} value={t.id}>
-                {lang === 'mr' ? (t.marathiTitle || t.title) : lang === 'hi' ? (t.hindiTitle || t.title) : t.title}
-              </option>
-            ))}
-          </select>
+            <FilePlus size={13} color="var(--color-accent)" />
+            <span>{lang === 'mr' ? 'नवीन कोरा मसुदा' : lang === 'hi' ? 'नया कोरा मसौदा' : 'New Blank Draft'}</span>
+          </button>
 
-          {/* Client Case Selector */}
-          <span className="deck-label" style={{ marginLeft: '0.5rem' }}>
-            <UserCheck size={14} color="#059669" />
-            <strong>{lang === 'mr' ? 'पक्षकार प्रकरण:' : lang === 'hi' ? 'पक्षकार प्रकरण:' : 'Client Case:'}</strong>
-          </span>
-          <select
-            className="form-select"
-            style={{ width: 'auto', minWidth: '220px', padding: '0.3rem 0.75rem', fontSize: '0.82rem' }}
-            value={selectedActId}
-            onChange={(e) => setSelectedActId(e.target.value)}
-          >
-            {acts.map((act) => (
-              <option key={act.id} value={act.id}>
-                {act.serialNo} - {act.parties[0]?.name || 'Act'} ({act.documentType})
-              </option>
-            ))}
-          </select>
+          {/* Client Case Selector (for inserting live client notary jurats/deponent clauses) */}
+          {acts.length > 0 && (
+            <>
+              <span className="deck-label" style={{ marginLeft: '0.5rem' }}>
+                <UserCheck size={14} color="#059669" />
+                <strong>{lang === 'mr' ? 'पक्षकार प्रकरण:' : lang === 'hi' ? 'पक्षकार प्रकरण:' : 'Client Case:'}</strong>
+              </span>
+              <select
+                className="form-select"
+                style={{ width: 'auto', minWidth: '220px', padding: '0.3rem 0.75rem', fontSize: '0.82rem' }}
+                value={selectedActId}
+                onChange={(e) => setSelectedActId(e.target.value)}
+              >
+                {acts.map((act) => (
+                  <option key={act.id} value={act.id}>
+                    {act.serialNo} - {act.parties[0]?.name || 'Act'} ({act.documentType})
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
 
         {/* Quick Insert Snippet Pills */}
@@ -1527,21 +1536,22 @@ export const NotaryDocumentEditor: React.FC<NotaryDocumentEditorProps> = ({ acts
                     }}
                   >
                     <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.92rem', color: '#1E293B' }}>
-                      ३. न्यायालयीन कृतिदेव शपथपत्र लोड करा (Load Court Kruti Dev Template)
+                      ३. कृतिदेव ०१० फॉन्ट लागू करा (Set Kruti Dev 010 Font)
                     </h4>
                     <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: '#64748B' }}>
-                      भारतीय जिल्हा व उच्च न्यायालयातील स्टॅंडर्ड फॉरमॅटनुसार तयार केलेले पूर्ण शपथपत्र लोड करा.
+                      दस्तऐवजातील फॉन्ट 'Kruti Dev 010' सेट करा आणि भारतीय न्यायालयीन फॉरमॅटमध्ये थेट टाइप करा.
                     </p>
                     <button
                       type="button"
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
-                        handleLoadTemplate('krutidev-court-affidavit');
+                        setFontFamily("'Kruti Dev 010', 'KrutiDev010', serif");
+                        execCmd('fontName', "'Kruti Dev 010', 'KrutiDev010', serif");
                         setShowKrutiModal(false);
                       }}
                     >
-                      <FilePlus size={13} />
-                      <span>नमुना शपथपत्र लोड करा (Load Kruti Dev Template)</span>
+                      <Type size={13} />
+                      <span>कृतिदेव फॉन्ट सेट करा (Set Kruti Dev 010)</span>
                     </button>
                   </div>
                 </div>

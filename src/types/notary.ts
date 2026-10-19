@@ -109,6 +109,19 @@ export interface NotaryAccount {
   role: 'admin' | 'notary';
   profile: NotaryProfile;
   createdAt: string;
+  status?: 'active' | 'suspended';
+  lastLoginAt?: string;
+  notes?: string;
+}
+
+export interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId?: string;
 }
 
 export interface AccessRequest {
@@ -135,7 +148,7 @@ export interface AuthAuditEntry {
   id: string;
   timestamp: string;
   email: string;
-  eventType: 'OTP_REQUESTED' | 'OTP_VERIFIED' | 'OTP_FAILED' | 'CREDENTIAL_LOGIN' | 'LOGOUT';
+  eventType: 'OTP_REQUESTED' | 'OTP_VERIFIED' | 'OTP_FAILED' | 'CREDENTIAL_LOGIN' | 'LOGOUT' | 'ACCOUNT_CREATED' | 'PASSWORD_RESET' | 'DATA_WIPED';
   ipAddress: string;
   status: 'SUCCESS' | 'FAILURE';
   details: string;

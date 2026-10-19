@@ -15,10 +15,15 @@ export class QrVerificationService {
    * even without access to the local browser database.
    */
   public static generateVerificationUrl(act: NotarialAct, profile: NotaryProfile): string {
-    const origin =
+    let origin =
       typeof window !== 'undefined' && window.location && window.location.origin
         ? window.location.origin
-        : 'http://localhost:5174';
+        : 'http://localhost:5173';
+
+    // When running on localhost / loopback, use the machine LAN IP so mobile phones on the same Wi-Fi can scan the QR code
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      origin = origin.replace('localhost', '192.168.0.102').replace('127.0.0.1', '192.168.0.102');
+    }
 
     const compact = {
       s: act.serialNo,
@@ -77,7 +82,13 @@ export class QrVerificationService {
    */
   public static decodePayload(encodedStr: string): VerificationRecord | null {
     try {
-      const decodedJson = decodeURIComponent(atob(encodedStr));
+      let raw = encodedStr.trim();
+      try {
+        raw = decodeURIComponent(raw);
+      } catch {}
+      // Replace spaces that may have been converted from '+' during URL query string parsing
+      const normalizedBase64 = raw.replace(/ /g, '+');
+      const decodedJson = decodeURIComponent(atob(normalizedBase64));
       const data = JSON.parse(decodedJson);
 
       const profile: NotaryProfile = {

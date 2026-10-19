@@ -24,6 +24,9 @@ import {
   Sparkles,
   RefreshCw,
   RotateCcw,
+  AlertCircle,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 
 interface NotaryDeskProps {
@@ -71,6 +74,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
   const [feesCharged, setFeesCharged] = useState<number>(500);
   const [bookNo, setBookNo] = useState<number>(1);
   const [pageNo, setPageNo] = useState<number>(28);
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   const handleResetToNewEntry = () => {
     setSerialNo(StorageService.getNextSerialNo(profile));
@@ -420,6 +424,11 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
   };
 
   const handleSaveAndPrint = () => {
+    setShowConfirmModal(true);
+  };
+
+  const confirmSaveAndPrint = () => {
+    setShowConfirmModal(false);
     const act = constructAct();
     StorageService.saveAct(act, profile);
     onActSaved(act);
@@ -971,6 +980,317 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
           }}
           onClose={() => setActiveSignatureParty(null)}
         />
+      )}
+
+      {/* Confirmation Modal Before Generating & Printing Certificate */}
+      {showConfirmModal && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            className="modal-content"
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              maxWidth: '680px',
+              width: '100%',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #E2E8F0',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '90vh',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '10px',
+                    backgroundColor: '#FEF2F2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#B91C1C',
+                    border: '1px solid #FCA5A5',
+                  }}
+                >
+                  <AlertCircle size={22} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#0F172A' }}>
+                    {lang === 'mr'
+                      ? 'प्रमाणपत्र तयार करण्याची पुष्टी करा'
+                      : lang === 'hi'
+                      ? 'प्रमाणपत्र निर्माण की पुष्टि करें'
+                      : 'Confirm Notarial Certificate Generation'}
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748B' }}>
+                    {lang === 'mr'
+                      ? 'कृपया अधिकृत प्रमाणपत्र तयार करण्यापूर्वी माहितीची खात्री करा.'
+                      : lang === 'hi'
+                      ? 'कृपया प्रमाणपत्र तैयार करने से पहले जानकारी की पुष्टि करें।'
+                      : 'Please check and verify all details carefully before issuing this act.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94A3B8',
+                  padding: '4px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body / Information Verification Summary */}
+            <div style={{ padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Question Banner */}
+              <div
+                style={{
+                  padding: '1rem',
+                  borderRadius: '10px',
+                  backgroundColor: '#FFFBEB',
+                  border: '1px solid #FDE68A',
+                  color: '#92400E',
+                  fontSize: '0.88rem',
+                  lineHeight: 1.5,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                }}
+              >
+                <AlertTriangle size={20} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <strong>
+                    {lang === 'mr'
+                      ? 'तुम्हाला खरोखर हे प्रमाणपत्र तयार करायचे आहे का? कृपया सर्व माहिती तपासून घ्या.'
+                      : lang === 'hi'
+                      ? 'क्या आप वास्तव में यह प्रमाणपत्र तैयार करना चाहते हैं? कृपया जानकारी जांच लें।'
+                      : 'Do you actually want to generate this certificate? Please check the information carefully.'}
+                  </strong>
+                  <div style={{ marginTop: '4px', fontSize: '0.82rem', color: '#B45309' }}>
+                    {lang === 'mr'
+                      ? 'पुष्टी केल्यास हा दस्तऐवज अधिकृत नमुना १५ नोंदवहीत कायमस्वरूपी नोंदवला जाईल आणि अनुक्रमांक पुढे वाढेल.'
+                      : lang === 'hi'
+                      ? 'पुष्टि करने पर यह प्रविष्टि प्रारूप १५ रजिस्टर में दर्ज होगी और क्रमांक आगे बढ़ेगा।'
+                      : 'Once confirmed, this act will be permanently entered into the statutory Form XV Register and the serial number will advance.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary Details Grid */}
+              <div
+                style={{
+                  background: '#F8FAFC',
+                  borderRadius: '12px',
+                  border: '1px solid #E2E8F0',
+                  padding: '1rem',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '0.75rem',
+                  fontSize: '0.84rem',
+                }}
+              >
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'नॉटरी अनुक्रमांक:' : lang === 'hi' ? 'नोटरी क्रमांक:' : 'Notarial Serial No:'}
+                  </span>
+                  <strong style={{ fontSize: '0.95rem', color: '#B91C1C' }}>
+                    {serialNo.trim() || StorageService.getNextSerialNo(profile)}
+                  </strong>
+                </div>
+
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'दस्तऐवज प्रकार:' : lang === 'hi' ? 'दस्तावेज़ प्रकार:' : 'Document Type:'}
+                  </span>
+                  <strong style={{ color: '#0F172A' }}>{customTitle || docType}</strong>
+                </div>
+
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'नोंद दिनांक:' : lang === 'hi' ? 'प्रविष्टि तिथि:' : 'Entry Date:'}
+                  </span>
+                  <strong style={{ color: '#0F172A' }}>{date}</strong>
+                </div>
+
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'नोंदवही स्थान:' : lang === 'hi' ? 'रजिस्टर स्थान:' : 'Register Placement:'}
+                  </span>
+                  <strong style={{ color: '#0F172A' }}>
+                    Book #{bookNo} &nbsp;|&nbsp; Page #{pageNo}
+                  </strong>
+                </div>
+
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'आकारलेले शुल्क:' : lang === 'hi' ? 'शुल्क:' : 'Fees Charged:'}
+                  </span>
+                  <strong style={{ color: '#059669' }}>₹ {feesCharged}</strong>
+                </div>
+
+                <div>
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '0.75rem' }}>
+                    {lang === 'mr' ? 'मुद्रांक मूल्य:' : lang === 'hi' ? 'स्टाम्प मूल्य:' : 'Stamp Value:'}
+                  </span>
+                  <strong style={{ color: '#0F172A' }}>₹ {stampValue}</strong>
+                </div>
+              </div>
+
+              {/* Parties Verification Breakdown */}
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
+                  {lang === 'mr'
+                    ? `पक्षकार पडताळणी (${parties.length}):`
+                    : lang === 'hi'
+                    ? `पक्षकार सत्यापन (${parties.length}):`
+                    : `Party Verification (${parties.length}):`}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {parties.map((p, idx) => (
+                    <div
+                      key={p.id || idx}
+                      style={{
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        border: '1px solid #E2E8F0',
+                        backgroundColor: '#FFFFFF',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '0.82rem',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <div>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            backgroundColor: '#E2E8F0',
+                            fontWeight: 700,
+                            fontSize: '0.72rem',
+                            color: '#334155',
+                            marginRight: '6px',
+                          }}
+                        >
+                          {p.role}
+                        </span>
+                        <strong style={{ color: p.name.trim() ? '#0F172A' : '#EF4444' }}>
+                          {p.name.trim() || (lang === 'mr' ? '[नाव प्रविष्ट केलेले नाही]' : lang === 'hi' ? '[नाम दर्ज नहीं किया]' : '[Name Not Entered]')}
+                        </strong>
+                        {p.relativeName && (
+                          <span style={{ color: '#64748B', marginLeft: '4px' }}>
+                            ({p.relationType} {p.relativeName})
+                          </span>
+                        )}
+                        <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>
+                          {p.idType}: {p.idNumber || '—'} {p.mobile ? `• Mob: ${p.mobile}` : ''}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: p.photoUrl ? '#DCFCE7' : '#F1F5F9',
+                            color: p.photoUrl ? '#166534' : '#64748B',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {p.photoUrl ? '✓ Photo' : 'No Photo'}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            backgroundColor: p.fingerprintUrl ? '#DCFCE7' : '#F1F5F9',
+                            color: p.fingerprintUrl ? '#166534' : '#64748B',
+                            fontWeight: 600,
+                          }}
+                        >
+                          {p.fingerprintUrl ? '✓ Biometric Thumb' : 'No Thumb'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                borderTop: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: '0.75rem',
+              }}
+            >
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowConfirmModal(false)}
+                style={{ padding: '0.5rem 1.25rem' }}
+              >
+                {lang === 'mr' ? 'माहिती तपासा / बदला' : lang === 'hi' ? 'विवरण जांचें / बदलें' : 'Check & Edit Information'}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-seal"
+                onClick={confirmSaveAndPrint}
+                style={{ padding: '0.5rem 1.5rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Printer size={16} />
+                <span>{lang === 'mr' ? 'होय, प्रमाणपत्र तयार करा' : lang === 'hi' ? 'हाँ, प्रमाणपत्र तैयार करें' : 'Yes, Confirm & Generate Certificate'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

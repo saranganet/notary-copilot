@@ -14,6 +14,7 @@ import {
   Sparkles,
   Globe,
   LogOut,
+  Shield,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -24,6 +25,8 @@ interface NavbarProps {
   onChangeLang?: (lang: Language) => void;
   onToggleLang: () => void;
   onLogout?: () => void;
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -34,6 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onChangeLang,
   onToggleLang,
   onLogout,
+  isAdmin,
+  onOpenAdmin,
 }) => {
   const [secuGenStatus, setSecuGenStatus] = useState<{ connected: boolean; message: string }>({
     connected: false,
@@ -117,6 +122,30 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="status-dot" />
               <span>{t.webcamReady}</span>
             </div>
+
+            {/* Master Admin Console Button */}
+            {isAdmin && onOpenAdmin && (
+              <button
+                type="button"
+                className="device-badge"
+                onClick={onOpenAdmin}
+                title="Open Platform Master Console (Manage Client Chambers & Storage)"
+                style={{
+                  background: '#1E293B',
+                  borderColor: '#334155',
+                  color: '#F8FAFC',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <Shield size={13} color="#38BDF8" />
+                <span>Admin Console</span>
+              </button>
+            )}
 
             {/* Switch Notary / Logout Button */}
             {onLogout && (

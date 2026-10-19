@@ -65,11 +65,17 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
     setIsLoggingIn(true);
 
     setTimeout(() => {
-      const account = StorageService.authenticate(username, password);
-      if (account) {
-        onLogin(account.profile);
-      } else {
-        setLoginError('Invalid credentials. Please verify your assigned username and password.');
+      try {
+        const account = StorageService.authenticate(username, password);
+        if (account) {
+          onLogin(account.profile);
+        } else {
+          setLoginError('Invalid credentials. Please verify your assigned username and password.');
+          setIsLoggingIn(false);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Invalid credentials. Please verify your assigned username and password.';
+        setLoginError(msg);
         setIsLoggingIn(false);
       }
     }, 250);

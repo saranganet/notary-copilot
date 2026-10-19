@@ -7,6 +7,8 @@ import type {
   EmailOtpSession,
   AuthAuditEntry,
 } from '../types/notary';
+import { indexedDb, DB_STORES } from './indexedDbService';
+import { firebaseSync } from './firebaseSyncService';
 
 const STORAGE_KEYS = {
   ACTS: 'notary_acts_db_v3',
@@ -15,6 +17,7 @@ const STORAGE_KEYS = {
   DRAFTS: 'notary_drafts_v1',
   CURRENT_DRAFT: 'notary_current_draft_v1',
   SESSION_USER: 'notary_active_session_v1',
+  SESSION_ACCOUNT: 'notary_active_account_v1',
   CUSTOM_NOTARIES: 'notary_custom_profiles_v1',
   ACCOUNTS: 'notary_accounts_v2',
   ACCESS_REQUESTS: 'notary_access_requests_v2',
@@ -94,8 +97,30 @@ export class StorageService {
     this.saveProfile(profile);
   }
 
+  public static getSessionAccount(): NotaryAccount | null {
+    const raw = localStorage.getItem(STORAGE_KEYS.SESSION_ACCOUNT);
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {}
+    }
+    const prof = this.getSessionUser();
+    if (!prof) return null;
+    return this.getAccounts().find((a) => a.profile.regNo === prof.regNo) || null;
+  }
+
+  public static setSessionAccount(account: NotaryAccount): void {
+    localStorage.setItem(STORAGE_KEYS.SESSION_ACCOUNT, JSON.stringify(account));
+  }
+
   public static clearSession(): void {
     localStorage.removeItem(STORAGE_KEYS.SESSION_USER);
+    localStorage.removeItem(STORAGE_KEYS.SESSION_ACCOUNT);
+  }
+
+  public static isMasterAdmin(): boolean {
+    const acc = this.getSessionAccount();
+    return !!acc && acc.role === 'admin';
   }
 
   public static getAllNotaries(): NotaryProfile[] {
@@ -121,14 +146,24 @@ export class StorageService {
     }
     try {
       const stored: NotaryAccount[] = JSON.parse(raw);
-      // Ensure default accounts are present
-      const merged = [...stored];
-      DEFAULT_ACCOUNTS.forEach((d) => {
-        if (!merged.some((m) => m.username.toLowerCase() === d.username.toLowerCase())) {
-          merged.push(d);
+      const accountsMap = new Map<string, NotaryAccount>();
+
+      // Preserve custom accounts created by admin (excluding old demo accounts)
+      stored.forEach((acc) => {
+        const u = acc.username.toLowerCase();
+        if (u !== 'rajesh' && u !== 'anand') {
+          accountsMap.set(u, acc);
         }
       });
-      return merged;
+
+      // Synchronize current DEFAULT_ACCOUNTS from config
+      DEFAULT_ACCOUNTS.forEach((d) => {
+        accountsMap.set(d.username.toLowerCase(), d);
+      });
+
+      const result = Array.from(accountsMap.values());
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(result));
+      return result;
     } catch {
       return DEFAULT_ACCOUNTS;
     }
@@ -140,7 +175,15 @@ export class StorageService {
       (a) => a.username.toLowerCase() !== account.username.toLowerCase()
     );
     const updated = [account, ...filtered];
-    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(updated));
+    try {
+      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(updated));
+    } catch {}
+
+    // Persist to IndexedDB & Cloud
+    indexedDb.put(DB_STORES.ACCOUNTS, account).catch(() => {});
+    if (firebaseSync.isConfigured()) {
+      firebaseSync.syncAccountsToCloud([account]).catch(() => {});
+    }
   }
 
   public static authenticate(username: string, password: string): NotaryAccount | null {
@@ -150,12 +193,25 @@ export class StorageService {
       (acc) => acc.username.toLowerCase() === trimmedUser && acc.password === password.trim()
     );
     if (match) {
+      if (match.status === 'suspended') {
+        this.logAuthEvent(
+          match.profile.email,
+          'CREDENTIAL_LOGIN',
+          'FAILURE',
+          `Suspended user ${match.username} attempted to sign in`
+        );
+        throw new Error('This chamber account has been suspended. Please contact the platform administrator.');
+      }
+
+      match.lastLoginAt = new Date().toISOString();
+      this.saveAccount(match);
+      this.setSessionAccount(match);
       this.setSessionUser(match.profile);
       this.logAuthEvent(
         match.profile.email,
         'CREDENTIAL_LOGIN',
         'SUCCESS',
-        `User ${match.username} authenticated with password`
+        `User ${match.username} authenticated successfully`
       );
       return match;
     }
@@ -436,6 +492,151 @@ export class StorageService {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
+  public static isDemoAct(act: NotarialAct): boolean {
+    if (!act) return false;
+    if (act.id && (act.id.startsWith('ns-act-8842') || act.id.startsWith('aff-9821') || act.id.startsWith('gap-1234') || act.id.startsWith('rv-act-') || act.id.startsWith('ak-act-'))) {
+      return true;
+    }
+    if (act.serialNo && (act.serialNo === 'NS-2026-0018' || act.serialNo === 'NS-2026-0017' || act.serialNo === 'NS-2026-0016' || act.serialNo === 'RV-2026-0008' || act.serialNo === 'AK-2026-0005')) {
+      return true;
+    }
+    if (act.parties && act.parties.some((p) => p.name === 'Rajesh Patil' || p.name === 'Aditya Verma' || p.name === 'Sanjay Deshmukh' || p.name === 'Vikram Malhotra')) {
+      return true;
+    }
+    return false;
+  }
+
+  public static purgeDemoData(): void {
+    try {
+      // Clear draft with demo data
+      const currentDraft = localStorage.getItem(STORAGE_KEYS.CURRENT_DRAFT);
+      if (
+        currentDraft &&
+        (currentDraft.includes('Rajesh Patil') ||
+          currentDraft.includes('NS-2026-0018') ||
+          currentDraft.includes('Sanjay Deshmukh') ||
+          currentDraft.includes('Gandhi Chowk') ||
+          currentDraft.includes('984211223344') ||
+          currentDraft.includes('General Affidavit - Solemn Affirmation'))
+      ) {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_DRAFT);
+      }
+
+      // Also clean up any saved drafts containing demo data
+      const rawDrafts = localStorage.getItem(STORAGE_KEYS.DRAFTS);
+      if (rawDrafts) {
+        try {
+          const drafts: LegalDraft[] = JSON.parse(rawDrafts);
+          if (Array.isArray(drafts)) {
+            const cleaned = drafts.filter(
+              (d) =>
+                !d.contentHtml.includes('Rajesh Patil') &&
+                !d.contentHtml.includes('NS-2026-0018') &&
+                !d.contentHtml.includes('Sanjay Deshmukh') &&
+                !d.title.includes('General Affidavit - Solemn Affirmation')
+            );
+            localStorage.setItem(STORAGE_KEYS.DRAFTS, JSON.stringify(cleaned));
+          }
+        } catch {}
+      }
+
+      // Clean all chamber act keys in localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_KEYS.ACTS)) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const acts: NotarialAct[] = JSON.parse(raw);
+              if (Array.isArray(acts)) {
+                const cleaned = acts.filter((a) => !this.isDemoAct(a));
+                if (cleaned.length !== acts.length) {
+                  localStorage.setItem(key, JSON.stringify(cleaned));
+                }
+              }
+            } catch {}
+          }
+        }
+      }
+    } catch {}
+  }
+
+  /**
+   * Completely wipe all user data (notarial acts, drafts, biometric scans,
+   * client records, access requests, and audit logs) across all users.
+   * Keeps authorized chamber credentials with clean 0-entry registers.
+   */
+  public static async wipeAllUserData(): Promise<{ wipedActs: number; wipedDrafts: number; status: string }> {
+    let wipedActsCount = 0;
+    let wipedDraftsCount = 0;
+
+    try {
+      // 1. Remove all drafts
+      const rawDrafts = localStorage.getItem(STORAGE_KEYS.DRAFTS);
+      if (rawDrafts) {
+        try {
+          const drafts = JSON.parse(rawDrafts);
+          if (Array.isArray(drafts)) wipedDraftsCount = drafts.length;
+        } catch {}
+      }
+      localStorage.removeItem(STORAGE_KEYS.DRAFTS);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_DRAFT);
+
+      // 2. Remove all chamber acts from localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith(STORAGE_KEYS.ACTS) || key.startsWith('notary_acts_'))) {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            try {
+              const acts = JSON.parse(raw);
+              if (Array.isArray(acts)) wipedActsCount += acts.length;
+            } catch {}
+          }
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+      // 3. Clear access requests, otp sessions, and audit logs
+      localStorage.removeItem(STORAGE_KEYS.ACCESS_REQUESTS);
+      localStorage.removeItem(STORAGE_KEYS.OTP_SESSIONS);
+      localStorage.removeItem(STORAGE_KEYS.AUTH_AUDIT);
+      localStorage.removeItem(STORAGE_KEYS.CUSTOM_NOTARIES);
+
+      // 4. Wipe high-capacity IndexedDB stores (acts, drafts, audit)
+      await indexedDb.clearUserData();
+
+      // 5. If Firebase is active, purge all cloud acts
+      if (firebaseSync.isConfigured()) {
+        await firebaseSync.wipeAllCloudActs();
+      }
+
+      // Log clean wipe audit
+      const sessionUser = this.getSessionUser();
+      this.logAuthEvent(
+        sessionUser?.email || 'admin@notarydesk.in',
+        'DATA_WIPED',
+        'SUCCESS',
+        `Complete wipe executed: removed ${wipedActsCount} acts and ${wipedDraftsCount} drafts across all chambers.`
+      );
+
+      return {
+        wipedActs: wipedActsCount,
+        wipedDrafts: wipedDraftsCount,
+        status: 'SUCCESS',
+      };
+    } catch (err) {
+      console.error('[StorageService] Error wiping all user data:', err);
+      return {
+        wipedActs: wipedActsCount,
+        wipedDrafts: wipedDraftsCount,
+        status: 'PARTIAL_ERROR',
+      };
+    }
+  }
+
   public static getActs(profile?: NotaryProfile): NotarialAct[] {
     const active = profile || this.getSessionUser() || this.getProfile();
     const notaryKey = this.getNotaryKey(active);
@@ -444,38 +645,46 @@ export class StorageService {
     const raw = localStorage.getItem(specificStorageKey);
     if (raw) {
       try {
-        return JSON.parse(raw);
+        const parsed: NotarialAct[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const cleanActs = parsed.filter((a) => !this.isDemoAct(a));
+          if (cleanActs.length !== parsed.length) {
+            this.saveActs(cleanActs, active);
+          }
+          return cleanActs;
+        }
       } catch (e) {
         console.error('Failed to parse stored acts:', e);
       }
     }
 
-    // For Nileema (Reg 15960), check legacy global key for existing data
-    if (notaryKey === '15960' || (active && active.regNo.includes('15960'))) {
-      const legacyRaw = localStorage.getItem(STORAGE_KEYS.ACTS);
-      if (legacyRaw) {
-        try {
-          const parsed = JSON.parse(legacyRaw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            localStorage.setItem(specificStorageKey, legacyRaw);
-            return parsed;
-          }
-        } catch {}
-      }
-    }
-
-    const initial = this.getInitialSeedActs(active);
-    this.saveActs(initial, active);
-    return initial;
+    return [];
   }
 
   public static saveActs(acts: NotarialAct[], profile?: NotaryProfile): void {
     const active = profile || this.getSessionUser() || this.getProfile();
     const notaryKey = this.getNotaryKey(active);
     const specificStorageKey = `${STORAGE_KEYS.ACTS}_${notaryKey}`;
-    localStorage.setItem(specificStorageKey, JSON.stringify(acts));
-    if (notaryKey === '15960' || !active) {
-      localStorage.setItem(STORAGE_KEYS.ACTS, JSON.stringify(acts));
+
+    try {
+      localStorage.setItem(specificStorageKey, JSON.stringify(acts));
+      if (notaryKey === '15960' || !active) {
+        localStorage.setItem(STORAGE_KEYS.ACTS, JSON.stringify(acts));
+      }
+    } catch (quotaErr) {
+      console.warn('[StorageService] LocalStorage quota reached. Protected by IndexedDB:', quotaErr);
+    }
+
+    // Unbounded High-Capacity Local Storage in IndexedDB
+    indexedDb.putMany(DB_STORES.ACTS, acts).catch((err) => {
+      console.warn('[StorageService] IndexedDB putMany warning:', err);
+    });
+
+    // Cloud Backup if Firebase is configured
+    if (firebaseSync.isConfigured() && active) {
+      const acc = this.getAccounts().find((a) => a.profile.regNo === active.regNo);
+      const chamberUser = acc ? acc.username : notaryKey;
+      firebaseSync.syncAllActsToCloud(acts, chamberUser).catch(() => {});
     }
   }
 
@@ -488,11 +697,21 @@ export class StorageService {
       acts.unshift(act);
     }
     this.saveActs(acts, profile);
+
+    const active = profile || this.getSessionUser() || this.getProfile();
+    const acc = active ? this.getAccounts().find((a) => a.profile.regNo === active.regNo) : null;
+    const chamberUser = acc ? acc.username : this.getNotaryKey(active);
+
+    indexedDb.put(DB_STORES.ACTS, { ...act, chamberUsername: chamberUser }).catch(() => {});
+    if (firebaseSync.isConfigured()) {
+      firebaseSync.syncActToCloud(act, chamberUser).catch(() => {});
+    }
   }
 
   public static deleteAct(id: string, profile?: NotaryProfile): void {
     const acts = this.getActs(profile).filter((a) => a.id !== id);
     this.saveActs(acts, profile);
+    indexedDb.delete(DB_STORES.ACTS, id).catch(() => {});
   }
 
   /**
@@ -541,6 +760,10 @@ export class StorageService {
 
   public static saveCurrentDraft(draft: LegalDraft): void {
     localStorage.setItem(STORAGE_KEYS.CURRENT_DRAFT, JSON.stringify(draft));
+  }
+
+  public static clearCurrentDraft(): void {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_DRAFT);
   }
 
   public static getActById(id: string, profile?: NotaryProfile): NotarialAct | undefined {
@@ -616,8 +839,7 @@ export class StorageService {
       })
       .filter((n) => !isNaN(n) && n > 0 && n < 100000);
 
-    const defaultBase = initials === 'NS' ? 18 : (initials === 'RV' ? 8 : (initials === 'AK' ? 5 : 0));
-    const max = numbers.length > 0 ? Math.max(...numbers) : defaultBase;
+    const max = numbers.length > 0 ? Math.max(...numbers) : 0;
     const next = max + 1;
     return `${prefix}${next.toString().padStart(4, '0')}`;
   }
@@ -665,367 +887,57 @@ export class StorageService {
     }
   }
 
-  /**
-   * Generates sample starter data customized for the active notary
-   */
-  private static getInitialSeedActs(profile?: NotaryProfile): NotarialAct[] {
-    const sampleFingerprint = this.generateSampleFingerprintSvg();
-    const active = profile || this.getSessionUser() || this.getProfile();
-    const regNo = active?.regNo || '';
-    const name = active?.notaryName || '';
 
-    if (regNo.includes('12480') || name.toLowerCase().includes('rajesh') || name.toLowerCase().includes('verma')) {
-      const sampleOwnerPhoto = this.generateAvatarSvg('VM', '#0284C7');
-      const sampleTenantPhoto = this.generateAvatarSvg('RA', '#0D9488');
-      const sampleWitnessPhoto = this.generateAvatarSvg('KS', '#4F46E5');
+  public static createSamplePreviewAct(profile?: NotaryProfile): NotarialAct {
+    const prof = profile || this.getProfile();
+    const regInitials = prof.regNo.replace(/[^a-zA-Z0-9]/g, '').slice(0, 5).toUpperCase() || 'NOTARY';
+    const year = new Date().getFullYear();
+    const today = new Date().toISOString().split('T')[0];
 
-      const rajeshSeed: NotarialAct = {
-        id: 'rv-act-9921-12480-delhi-0008',
-        serialNo: 'RV-2026-0008',
-        date: '2026-09-15',
-        documentType: 'Rental Agreement',
-        customDocumentTitle: 'Residential Lease Agreement (11 Months)',
-        status: 'Completed',
-        feesCharged: 500,
-        stampValue: 100,
-        bookNo: 1,
-        pageNo: 12,
-        watermark: 'Preview',
-        verifiedToken: 'RV-VERIFY-0008',
-        createdAt: '2026-09-15T11:30:00.000Z',
-        parties: [
-          {
-            id: 'p-1',
-            role: 'Owner',
-            name: 'Vikram Malhotra',
-            relationType: 'S/o',
-            relativeName: 'O. P. Malhotra',
-            age: '52',
-            address: 'B-42, Greater Kailash Part 1, New Delhi 110048',
-            idType: 'Aadhaar Card',
-            idNumber: '912345678901',
-            mobile: '9810112233',
-            photoUrl: sampleOwnerPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 96,
-            fingerprintCapturedAt: '2026-09-15 11:32:10',
-            signatureMode: 'physical',
-          },
-          {
-            id: 'p-2',
-            role: 'Tenant',
-            name: 'Rohit Aggarwal',
-            relationType: 'S/o',
-            relativeName: 'Sanjay Aggarwal',
-            age: '29',
-            address: 'Flat 302, Green Park Extension, New Delhi 110016',
-            idType: 'PAN Card',
-            idNumber: 'ABCPA1234D',
-            mobile: '9811223344',
-            photoUrl: sampleTenantPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 94,
-            fingerprintCapturedAt: '2026-09-15 11:35:40',
-            signatureMode: 'physical',
-          },
-          {
-            id: 'p-3',
-            role: 'Witness',
-            name: 'Kavita Sundaram',
-            relationType: 'D/o',
-            relativeName: 'R. Sundaram',
-            age: '34',
-            address: 'Bar Association, Patiala House Courts, New Delhi 110001',
-            idType: 'Voter ID',
-            idNumber: 'DL/01/023/456789',
-            mobile: '9818899001',
-            photoUrl: sampleWitnessPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 95,
-            fingerprintCapturedAt: '2026-09-15 11:37:15',
-            signatureMode: 'physical',
-          },
-        ],
-      };
-
-      const rajeshAffidavit: NotarialAct = {
-        id: 'rv-aff-8812-12480-delhi-0007',
-        serialNo: 'RV-2026-0007',
-        date: '2026-09-14',
-        documentType: 'General Affidavit',
-        customDocumentTitle: 'Affidavit of Solemn Affirmation & Address Proof',
-        status: 'Completed',
-        feesCharged: 250,
-        stampValue: 100,
-        bookNo: 1,
-        pageNo: 11,
-        watermark: 'Official',
-        verifiedToken: 'RV-VERIFY-0007',
-        createdAt: '2026-09-14T10:15:00.000Z',
-        parties: [
-          {
-            id: 'p-aff-1',
-            role: 'Deponent',
-            name: 'Harpreet Singh',
-            relationType: 'S/o',
-            relativeName: 'Gurmeet Singh',
-            age: '40',
-            address: 'C-15, Lajpat Nagar 4, New Delhi 110024',
-            idType: 'Aadhaar Card',
-            idNumber: '923456789012',
-            mobile: '9811334455',
-            photoUrl: sampleOwnerPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 94,
-            signatureMode: 'physical',
-          },
-          {
-            id: 'p-aff-2',
-            role: 'Witness',
-            name: 'Adv. Manjit Grover',
-            relationType: 'S/o',
-            relativeName: 'K. S. Grover',
-            age: '45',
-            address: 'Patiala House Courts Bar Association, New Delhi',
-            idType: 'Voter ID',
-            idNumber: 'DL/02/011/987654',
-            mobile: '9811445566',
-            photoUrl: sampleWitnessPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 90,
-            signatureMode: 'physical',
-          },
-        ],
-      };
-
-      return [rajeshSeed, rajeshAffidavit];
-    }
-
-    if (regNo.includes('18210') || name.toLowerCase().includes('anand') || name.toLowerCase().includes('kulkarni')) {
-      const sampleOwnerPhoto = this.generateAvatarSvg('SJ', '#0284C7');
-      const sampleTenantPhoto = this.generateAvatarSvg('MK', '#0D9488');
-      const sampleWitnessPhoto = this.generateAvatarSvg('PS', '#4F46E5');
-
-      const anandSeed: NotarialAct = {
-        id: 'ak-act-7711-18210-pune-0005',
-        serialNo: 'AK-2026-0005',
-        date: '2026-09-12',
-        documentType: 'Rental Agreement',
-        customDocumentTitle: 'Leave and License Agreement (11 Months)',
-        status: 'Completed',
-        feesCharged: 500,
-        stampValue: 100,
-        bookNo: 1,
-        pageNo: 8,
-        watermark: 'Preview',
-        verifiedToken: 'AK-VERIFY-0005',
-        createdAt: '2026-09-12T14:20:00.000Z',
-        parties: [
-          {
-            id: 'p-1',
-            role: 'Owner',
-            name: 'Suresh Joshi',
-            relationType: 'S/o',
-            relativeName: 'Ganesh Joshi',
-            age: '49',
-            address: 'Shivajinagar, Pune 411005',
-            idType: 'Aadhaar Card',
-            idNumber: '934567890123',
-            mobile: '9422112233',
-            photoUrl: sampleOwnerPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 95,
-            signatureMode: 'physical',
-          },
-          {
-            id: 'p-2',
-            role: 'Tenant',
-            name: 'Mahesh Kulkarni',
-            relationType: 'S/o',
-            relativeName: 'V. Kulkarni',
-            age: '33',
-            address: 'Kothrud, Pune 411038',
-            idType: 'PAN Card',
-            idNumber: 'ABCDE9876K',
-            mobile: '9422334455',
-            photoUrl: sampleTenantPhoto,
-            fingerprintUrl: sampleFingerprint,
-            fingerprintQuality: 92,
-            signatureMode: 'physical',
-          },
-          {
-            id: 'p-3',
-            role: 'Witness',
-            name: 'Pravin Shinde',
-            relationType: 'S/o',
-            relativeName: 'B. Shinde',
-            age: '37',
-            address: 'District Court Complex, Shivajinagar, Pune 411005',
-            idType: 'Voter ID',
-            idNumber: 'MH/14/082/123456',
-            mobile: '9422556677',
-            photoUrl: sampleWitnessPhoto,
-            signatureMode: 'physical',
-          },
-        ],
-      };
-
-      return [anandSeed];
-    }
-
-    // Default: Adv. Nileema Saranga Starter Acts
-    const sampleOwnerPhoto = this.generateAvatarSvg('RP', '#0284C7');
-    const sampleTenantPhoto = this.generateAvatarSvg('SD', '#0D9488');
-    const sampleWitnessPhoto = this.generateAvatarSvg('AS', '#4F46E5');
-
-    const seedAct: NotarialAct = {
-      id: 'ns-act-8842-4123-b1c4-09871234abcd',
-      serialNo: 'NS-2026-0018',
-      date: '2026-09-08',
-      documentType: 'Rental Agreement',
-      customDocumentTitle: 'Residential Tenancy Agreement (11 Months)',
-      status: 'Completed',
-      feesCharged: 500,
-      stampValue: 100,
-      bookNo: 1,
-      pageNo: 28,
-      watermark: 'Preview',
-      verifiedToken: 'NS-VERIFY-0018',
-      createdAt: '2026-09-08T17:45:00.000Z',
-      parties: [
-        {
-          id: 'p-1',
-          role: 'Owner',
-          name: 'Rajesh Patil',
-          relationType: 'S/o',
-          relativeName: 'Anant Patil',
-          age: '46',
-          address: 'Gandhi Chowk, Badlapur East 421503',
-          idType: 'Aadhaar Card',
-          idNumber: '984211223344',
-          mobile: '9822101010',
-          photoUrl: sampleOwnerPhoto,
-          fingerprintUrl: sampleFingerprint,
-          fingerprintQuality: 93,
-          fingerprintCapturedAt: '2026-09-08 17:48:12',
-          signatureMode: 'physical',
-        },
-        {
-          id: 'p-2',
-          role: 'Tenant',
-          name: 'Sanjay Deshmukh',
-          relationType: 'S/o',
-          relativeName: 'Prakash Deshmukh',
-          age: '31',
-          address: 'Station Road, Badlapur East 421503',
-          idType: 'PAN Card',
-          idNumber: 'ABCDE1234F',
-          mobile: '9823445566',
-          photoUrl: sampleTenantPhoto,
-          fingerprintUrl: sampleFingerprint,
-          fingerprintQuality: 91,
-          fingerprintCapturedAt: '2026-09-08 17:50:45',
-          signatureMode: 'physical',
-        },
-        {
-          id: 'p-3',
-          role: 'Witness',
-          name: 'Amit Shinde',
-          relationType: 'S/o',
-          relativeName: 'Dattatray Shinde',
-          age: '38',
-          address: 'Katrap, Badlapur East 421503',
-          idType: 'Aadhaar Card',
-          idNumber: '776655443322',
-          mobile: '9822778899',
-          photoUrl: sampleWitnessPhoto,
-          fingerprintUrl: sampleFingerprint,
-          fingerprintQuality: 95,
-          fingerprintCapturedAt: '2026-09-08 17:52:19',
-          signatureMode: 'physical',
-        },
-      ],
-    };
-
-    const affidavitAct: NotarialAct = {
-      id: 'aff-9821-4123-b1c4-09871234abcd',
-      serialNo: 'NS-2026-0017',
-      date: '2026-09-07',
+    return {
+      id: 'sample-preview-act',
+      serialNo: `${regInitials}/${year}/SAMPLE-01`,
+      date: today,
       documentType: 'General Affidavit',
-      customDocumentTitle: 'Affidavit for Change of Name in Govt Records',
-      status: 'Completed',
-      feesCharged: 250,
-      stampValue: 100,
-      bookNo: 1,
-      pageNo: 27,
-      watermark: 'Official',
-      verifiedToken: 'NS-VERIFY-0017',
-      createdAt: '2026-09-07T11:20:00.000Z',
+      customDocumentTitle: 'Affidavit of Solemn Affirmation & Attestation',
       parties: [
         {
-          id: 'p-aff-1',
+          id: 'sample-party-1',
           role: 'Deponent',
-          name: 'Sunita Sharma',
-          relationType: 'W/o',
-          relativeName: 'Vikram Sharma',
-          age: '35',
-          address: 'Rameshwar Park, Badlapur East 421503',
+          name: 'Rameshwar D. Sharma',
+          relationType: 'S/o',
+          relativeName: 'Dinanath Sharma',
+          age: '38',
+          address: 'B-402, Shanti Heights, Station Road, Near Court Complex',
           idType: 'Aadhaar Card',
-          idNumber: 'XXXX-XXXX-9921',
-          mobile: '9823112233',
-          photoUrl: sampleTenantPhoto,
-          fingerprintUrl: sampleFingerprint,
-          fingerprintQuality: 95,
+          idNumber: 'XXXX-XXXX-4589',
+          mobile: '+91 98765 43210',
           signatureMode: 'physical',
         },
         {
-          id: 'p-aff-2',
+          id: 'sample-party-2',
           role: 'Witness',
-          name: 'Adv. K. R. Joshi',
+          name: 'Adv. Suresh V. Patil',
           relationType: 'S/o',
-          relativeName: 'R. K. Joshi',
+          relativeName: 'Vilas Patil',
           age: '42',
-          address: 'Badlapur Bar Association, Badlapur',
-          idType: 'Voter ID',
-          idNumber: 'MH/12/3421',
-          mobile: '9822334455',
-          photoUrl: sampleWitnessPhoto,
-          fingerprintUrl: sampleFingerprint,
-          fingerprintQuality: 88,
+          address: 'Bar Association Room No. 4, District Court Complex',
+          idType: 'Other Official ID',
+          idNumber: 'MAH/BAR/2012/88',
+          mobile: '+91 98230 11223',
           signatureMode: 'physical',
         },
       ],
+      feesCharged: 100,
+      stampValue: 100,
+      bookNo: 1,
+      pageNo: 1,
+      notes: 'Sample preview for verification of certificate typography, layout, and QR seal.',
+      watermark: 'Preview',
+      verifiedToken: 'SAMPLE-VERIFY-' + Date.now().toString(36).toUpperCase(),
+      createdAt: new Date().toISOString(),
+      status: 'Completed',
     };
-
-    return [seedAct, affidavitAct];
   }
 
-  private static generateAvatarSvg(initials: string, bg: string): string {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="240" viewBox="0 0 200 240">
-      <rect width="200" height="240" fill="#F1F5F9"/>
-      <circle cx="100" cy="90" r="45" fill="${bg}"/>
-      <path d="M40 220 C40 160, 160 160, 160 220 Z" fill="${bg}" opacity="0.85"/>
-      <text x="100" y="102" font-size="28" font-family="sans-serif" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${initials}</text>
-      <rect x="10" y="210" width="180" height="22" rx="4" fill="#0F172A" opacity="0.75"/>
-      <text x="100" y="225" font-size="9" font-family="monospace" fill="#F8FAFC" text-anchor="middle">LIVE WEBCAM VERIFIED</text>
-    </svg>`;
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-  }
-
-  private static generateSampleFingerprintSvg(): string {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="240" viewBox="0 0 200 240">
-      <rect width="200" height="240" fill="#FFFFFF"/>
-      <g stroke="#1E293B" stroke-width="2" fill="none" stroke-linecap="round">
-        <path d="M100 40 C60 40, 45 80, 45 120 C45 165, 65 200, 100 200 C135 200, 155 165, 155 120 C155 80, 140 40, 100 40 Z"/>
-        <path d="M100 55 C70 55, 60 85, 60 120 C60 155, 75 185, 100 185 C125 185, 140 155, 140 120 C140 85, 130 55, 100 55 Z"/>
-        <path d="M100 70 C80 70, 72 90, 72 120 C72 145, 82 170, 100 170 C118 170, 128 145, 128 120 C128 90, 120 70, 100 70 Z"/>
-        <path d="M100 85 C88 85, 82 100, 82 120 C82 138, 90 155, 100 155 C110 155, 118 138, 118 120 C118 100, 112 85, 100 85 Z"/>
-        <path d="M100 100 C95 100, 92 108, 92 120 C92 130, 95 140, 100 140 C105 140, 108 130, 108 120 C108 108, 105 100, 100 100 Z"/>
-        <circle cx="100" cy="120" r="3" fill="#1E293B"/>
-      </g>
-      <rect x="25" y="210" width="150" height="20" rx="3" fill="#0F766E"/>
-      <text x="100" y="224" font-size="9" font-family="monospace" font-weight="bold" fill="#F0FDFA" text-anchor="middle">SECUGEN VERIFIED (93%)</text>
-    </svg>`;
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-  }
 }
