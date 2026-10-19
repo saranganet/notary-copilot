@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { NotarialAct, NotaryProfile } from '../../types/notary';
 import { StorageService } from '../../services/storageService';
 import { QrVerificationService } from '../../services/qrVerificationService';
-import { Printer, ArrowLeft, Globe, BookOpen, QrCode } from 'lucide-react';
+import { Printer, ArrowLeft, Globe, BookOpen, QrCode, Smartphone, Copy, Check, X, ZoomIn } from 'lucide-react';
 import { TRANSLATIONS, type Language } from '../../i18n/translations';
 import { NotaryLogo } from '../common/NotaryLogo';
 
@@ -33,6 +33,8 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
   const [pageNo, setPageNo] = useState<number>(act.pageNo || 28);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [verificationUrl, setVerificationUrl] = useState<string>('');
+  const [showZoomQr, setShowZoomQr] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
   const t = TRANSLATIONS[lang];
 
@@ -606,7 +608,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 borderRadius: '6px',
                 padding: '6px 4px',
                 background: '#FFFFFF',
-                width: '125px',
+                width: '135px',
                 boxSizing: 'border-box',
               }}
             >
@@ -628,8 +630,8 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                     src={qrCodeDataUrl}
                     alt={`Verification QR Code for ${act.serialNo}`}
                     style={{
-                      width: '96px',
-                      height: '96px',
+                      width: '115px',
+                      height: '115px',
                       display: 'block',
                       margin: '0 auto',
                     }}
@@ -638,8 +640,8 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               ) : (
                 <div
                   style={{
-                    width: '96px',
-                    height: '96px',
+                    width: '115px',
+                    height: '115px',
                     background: '#F8FAFC',
                     display: 'flex',
                     alignItems: 'center',
@@ -675,15 +677,31 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               >
                 {act.serialNo}
               </div>
-              <div
+
+              {/* On-Screen Easy Zoom Button for Smartphone Camera */}
+              <button
+                type="button"
+                className="no-print"
+                onClick={() => setShowZoomQr(true)}
                 style={{
-                  fontSize: '0.48rem',
-                  color: '#64748B',
-                  marginTop: '1px',
+                  background: '#FEF2F2',
+                  border: '1px solid #FECACA',
+                  color: '#B91C1C',
+                  borderRadius: '4px',
+                  padding: '2px 6px',
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginTop: '4px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
                 }}
+                title="Enlarge QR Code on screen for easy smartphone camera scanning"
               >
-                notary-copilot.app
-              </div>
+                <ZoomIn size={11} />
+                <span>{lang === 'mr' ? 'मोठा करा (Zoom)' : lang === 'hi' ? 'बड़ा करें (Zoom)' : 'Zoom for Phone'}</span>
+              </button>
             </div>
 
             {/* Clean, authentic signing and physical stamp space for Notary */}
@@ -726,6 +744,130 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
           </div>
         </div>
       </div>
+
+      {/* High-Resolution Zoom QR Modal for Easy Smartphone Scanning */}
+      {showZoomQr && (
+        <div className="modal-backdrop no-print" onClick={() => setShowZoomQr(false)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: '440px', textAlign: 'center', padding: '1.75rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Smartphone size={20} color="#059669" />
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>
+                  {lang === 'mr' ? 'मोबाईल कॅमेऱ्याने स्कॅन करा' : lang === 'hi' ? 'मोबाइल कैमरे से स्कैन करें' : 'Scan with Mobile Camera'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowZoomQr(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748B',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: '#FFFFFF',
+                border: '2px solid #E2E8F0',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                display: 'inline-block',
+                margin: '0 auto 1.25rem auto',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+              }}
+            >
+              {qrCodeDataUrl && (
+                <img
+                  src={qrCodeDataUrl}
+                  alt="High Resolution QR Code"
+                  style={{
+                    width: '260px',
+                    height: '260px',
+                    display: 'block',
+                    margin: '0 auto',
+                  }}
+                />
+              )}
+            </div>
+
+            <p style={{ color: '#64748B', fontSize: '0.82rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
+              {lang === 'mr'
+                ? 'आपल्या मोबाईलचा कॅमेरा या QR कोडवर धरा. अधिकृत डिजिटल साक्षांकन प्रमाणपत्र थेट मोबाईलवर उघडेल.'
+                : lang === 'hi'
+                ? 'अपने मोबाइल कैमरे को इस QR कोड के सामने लाएं। आधिकारिक सत्यापन प्रमाणपत्र तुरंत मोबाइल पर खुलेगा।'
+                : 'Point your smartphone camera directly at this high-resolution QR code to open the official verification page.'}
+            </p>
+
+            <div
+              style={{
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                padding: '0.65rem 0.85rem',
+                fontSize: '0.75rem',
+                color: '#334155',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                marginBottom: '1rem',
+              }}
+            >
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+                {verificationUrl}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(verificationUrl).then(() => {
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  });
+                }}
+                className="btn btn-secondary btn-sm"
+                style={{ flexShrink: 0, padding: '2px 8px', fontSize: '0.72rem' }}
+              >
+                {copiedLink ? <Check size={12} color="#059669" /> : <Copy size={12} />}
+                <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              {onOpenVerification && (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    setShowZoomQr(false);
+                    onOpenVerification(act, profile);
+                  }}
+                  style={{ fontWeight: 700 }}
+                >
+                  Open Portal in Browser
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowZoomQr(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

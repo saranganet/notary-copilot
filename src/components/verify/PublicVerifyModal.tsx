@@ -235,21 +235,21 @@ export const PublicVerifyModal: React.FC<PublicVerifyModalProps> = ({
                       src={qrCodeDataUrl}
                       alt="Statutory QR Code"
                       style={{
-                        width: '110px',
-                        height: '110px',
-                        borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
+                        width: '170px',
+                        height: '170px',
+                        borderRadius: '10px',
+                        border: '2px solid #CBD5E1',
                         background: '#FFFFFF',
-                        padding: '4px',
+                        padding: '6px',
                         display: 'block',
                       }}
                     />
                   ) : (
                     <div
                       style={{
-                        width: '110px',
-                        height: '110px',
-                        borderRadius: '8px',
+                        width: '170px',
+                        height: '170px',
+                        borderRadius: '10px',
                         background: '#E2E8F0',
                         display: 'flex',
                         alignItems: 'center',

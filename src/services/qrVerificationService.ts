@@ -10,9 +10,8 @@ export interface VerificationRecord {
 export class QrVerificationService {
   /**
    * Generates a fully qualified public verification URL for the notarial act.
-   * Encodes key evidentiary metadata into a compact URL parameter so external
-   * devices (banks, courts, citizens) can instantly verify the physical certificate
-   * even without access to the local browser database.
+   * Uses optimized compact serialization so the resulting QR code has large,
+   * high-contrast modules that any phone camera can scan instantly off screens.
    */
   public static generateVerificationUrl(act: NotarialAct, profile: NotaryProfile): string {
     let origin =
@@ -25,6 +24,7 @@ export class QrVerificationService {
       origin = origin.replace('localhost', '192.168.0.102').replace('127.0.0.1', '192.168.0.102');
     }
 
+    // Lean evidentiary payload without bloated duplicated keys
     const compact = {
       s: act.serialNo,
       t: act.verifiedToken,
@@ -34,23 +34,29 @@ export class QrVerificationService {
       pg: act.pageNo,
       n: profile.notaryName,
       r: profile.regNo,
-      a: profile.areaOfPractice,
+      a: profile.areaOfPractice || '',
       f: profile.firmName,
-      p: act.parties.map((pt) => ({
+      p: (act.parties || []).map((pt) => ({
         n: pt.name,
         r: pt.role,
-        idT: pt.idType,
         idN: pt.idNumber ? pt.idNumber.slice(-4) : '',
         bio: !!pt.fingerprintUrl,
-        pho: !!pt.photoUrl,
       })),
     };
 
     try {
       const json = JSON.stringify(compact);
-      // Safe base64 encoding with UTF-8 support
-      const encoded = btoa(encodeURIComponent(json));
-      return `${origin}/?verify=${encodeURIComponent(act.serialNo)}&v=${encodeURIComponent(encoded)}`;
+      // UTF-8 safe, URL-safe base64 encoding without '%' bloat
+      const encoded = btoa(
+        encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+          String.fromCharCode(parseInt(p1, 16))
+        )
+      )
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      return `${origin}/?verify=${encodeURIComponent(act.serialNo)}&v=${encoded}`;
     } catch (e) {
       console.error('Error generating verification payload:', e);
       return `${origin}/?verify=${encodeURIComponent(act.serialNo)}`;
@@ -58,14 +64,16 @@ export class QrVerificationService {
   }
 
   /**
-   * Generates a crisp, scannable QR Code as a base64 data URL
+   * Generates a crisp, scannable QR Code as a base64 data URL.
+   * Uses errorCorrectionLevel 'L' (Low) and quiet zone margin=2 to ensure
+   * large, bold modules that smartphone camera sensors can detect effortlessly.
    */
   public static async generateQrCode(url: string): Promise<string> {
     try {
       return await QRCode.toDataURL(url, {
-        errorCorrectionLevel: 'M',
-        margin: 1,
-        width: 200,
+        errorCorrectionLevel: 'L',
+        margin: 2,
+        width: 500,
         color: {
           dark: '#000000',
           light: '#ffffff',
@@ -86,9 +94,23 @@ export class QrVerificationService {
       try {
         raw = decodeURIComponent(raw);
       } catch {}
-      // Replace spaces that may have been converted from '+' during URL query string parsing
-      const normalizedBase64 = raw.replace(/ /g, '+');
-      const decodedJson = decodeURIComponent(atob(normalizedBase64));
+
+      // Handle base64url or standard base64 with padding
+      let b64 = raw.replace(/-/g, '+').replace(/_/g, '/').replace(/ /g, '+');
+      while (b64.length % 4) b64 += '=';
+
+      // UTF-8 safe decode
+      let decodedJson = '';
+      try {
+        decodedJson = decodeURIComponent(
+          Array.prototype.map
+            .call(atob(b64), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+      } catch {
+        decodedJson = atob(b64);
+      }
+
       const data = JSON.parse(decodedJson);
 
       const profile: NotaryProfile = {
@@ -121,12 +143,12 @@ export class QrVerificationService {
         parties: Array.isArray(data.p)
           ? data.p.map((item: any, idx: number) => ({
               id: `p-${idx + 1}`,
-              role: item.r || 'Executant',
-              name: item.n || 'Registered Party',
+              role: item.r || (typeof item === 'string' ? 'Party' : 'Executant'),
+              name: typeof item === 'string' ? item : item.n || 'Registered Party',
               relationType: 'S/o',
               relativeName: '',
               address: 'Verified Physical Presence',
-              idType: item.idT || 'Official ID',
+              idType: 'Official ID',
               idNumber: item.idN ? `XXXX-XXXX-${item.idN}` : 'Verified',
               mobile: '',
               signatureMode: 'physical',
