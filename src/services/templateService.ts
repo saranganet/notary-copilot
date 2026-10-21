@@ -94,7 +94,7 @@ export const NOTARY_SNIPPETS = {
     <tr>
       <td style="vertical-align: top; width: 60%; line-height: 1.4;">
         <div><strong>Notarial Serial No:</strong> ${act?.serialNo || '[Notarial Serial No.]'}</div>
-        <div><strong>Book No:</strong> ${act?.bookNo ?? 1} &nbsp;|&nbsp; <strong>Page No:</strong> ${act?.pageNo ?? 1}</div>
+        <div><strong>Reg No:</strong> ${act?.bookNo ?? 1} &nbsp;|&nbsp; <strong>Page No:</strong> ${act?.pageNo ?? 1}</div>
         <div><strong>Entry Date:</strong> ${act?.date || new Date().toISOString().split('T')[0]}</div>
       </td>
       <td style="vertical-align: top; width: 40%; text-align: right; line-height: 1.3;">

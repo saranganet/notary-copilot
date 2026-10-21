@@ -72,7 +72,7 @@ export const FormXVRegister: React.FC<FormXVRegisterProps> = ({
       'Document Nature',
       'Stamp Value (INR)',
       'Fee Charged (INR)',
-      'Book No',
+      'Reg No',
       'Page No',
       'Biometric Status',
     ];

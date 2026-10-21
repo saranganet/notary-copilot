@@ -222,7 +222,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     certNone: 'None',
     certPrintBtn: 'Print Certificate (A4)',
     certBackBtn: 'Back to Desk',
-    certBookNo: 'Book No',
+    certBookNo: 'Reg No',
     certPageNo: 'Page No',
 
     registerTitle: 'Form XV Notarial Register',
@@ -367,7 +367,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     certNone: 'काहीही नाही',
     certPrintBtn: 'प्रमाणपत्र प्रिंट करा (A4)',
     certBackBtn: 'मागे जा',
-    certBookNo: 'वही क्र.',
+    certBookNo: 'नोंदणी क्र.',
     certPageNo: 'पान क्र.',
 
     registerTitle: 'नमुना १५ अधिकृत नॉटरी नोंदवही',
@@ -512,7 +512,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     certNone: 'कोई नहीं',
     certPrintBtn: 'प्रमाणपत्र प्रिंट करें (A4)',
     certBackBtn: 'वापस जाएं',
-    certBookNo: 'बही सं.',
+    certBookNo: 'पंजीकरण सं.',
     certPageNo: 'पृष्ठ सं.',
 
     registerTitle: 'प्रारूप १५ आधिकारिक नोटरी रजिस्टर',

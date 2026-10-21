@@ -209,7 +209,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
           >
             <BookOpen size={14} color="#38BDF8" />
             <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span>{lang === 'mr' ? 'वही क्र.:' : lang === 'hi' ? 'बही सं.:' : 'Book No:'}</span>
+              <span>{lang === 'mr' ? 'नोंदणी क्र.:' : lang === 'hi' ? 'पंजीकरण सं.:' : 'Reg No:'}</span>
               <input
                 type="number"
                 value={bookNo}
@@ -589,7 +589,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                 }}
               >
                 <span>
-                  <strong>{lang === 'mr' ? 'वही क्र.:' : lang === 'hi' ? 'बही सं.:' : 'Book No:'}</strong> {bookNo}
+                  <strong>{lang === 'mr' ? 'नोंदणी क्र.:' : lang === 'hi' ? 'पंजीकरण सं.:' : 'Reg No:'}</strong> {bookNo}
                 </span>
                 <span>
                   <strong>{lang === 'mr' ? 'पान क्र.:' : lang === 'hi' ? 'पृष्ठ सं.:' : 'Page No:'}</strong> {pageNo}

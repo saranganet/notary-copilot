@@ -638,7 +638,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
 
           <div className="form-group">
             <label className="form-label">
-              {lang === 'mr' ? 'वही क्र. (Book No.)' : lang === 'hi' ? 'बही सं. (Book No.)' : 'Book No.'}
+              {lang === 'mr' ? 'नोंदणी क्र. (Reg No.)' : lang === 'hi' ? 'पंजीकरण सं. (Reg No.)' : 'Reg No.'}
             </label>
             <input
               type="number"
@@ -1153,7 +1153,7 @@ export const NotaryDesk: React.FC<NotaryDeskProps> = ({
                     {lang === 'mr' ? 'नोंदवही स्थान:' : lang === 'hi' ? 'रजिस्टर स्थान:' : 'Register Placement:'}
                   </span>
                   <strong style={{ color: '#0F172A' }}>
-                    Book #{bookNo} &nbsp;|&nbsp; Page #{pageNo}
+                    Reg #{bookNo} &nbsp;|&nbsp; Page #{pageNo}
                   </strong>
                 </div>
 
