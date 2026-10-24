@@ -306,26 +306,31 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
                 <NotaryLogo size={50} showShadow={false} />
               </div>
-              <div className="cert-firm-name">
-                {profile.firmName || profile.notaryName}
-              </div>
-
-              {/* Line 1: Academic / Educational Qualifications (e.g. B.L.S, LL.B) */}
-              {eduQualifications && (
-                <div
-                  style={{
-                    fontSize: '0.84rem',
-                    fontWeight: 700,
-                    color: '#991B1B',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    marginTop: '2px',
-                    marginBottom: '1px',
-                  }}
-                >
-                  {eduQualifications}
+              {/* Name and Right-Aligned Qualifications Block */}
+              <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                <div className="cert-firm-name">
+                  {profile.firmName || profile.notaryName}
                 </div>
-              )}
+
+                {/* Line 1: Academic Qualifications positioned under right side of name (below Hegde) */}
+                {eduQualifications && (
+                  <div
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: '#991B1B',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      marginTop: '0px',
+                      marginBottom: '2px',
+                      alignSelf: 'flex-end',
+                      transform: 'translateX(10px)',
+                    }}
+                  >
+                    {eduQualifications}
+                  </div>
+                )}
+              </div>
 
               {/* Line 2: Notary Public Designation and Registration Number */}
               <div
@@ -335,7 +340,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                   color: '#991B1B',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
-                  marginTop: '1px',
+                  marginTop: '2px',
                 }}
               >
                 {lang === 'mr'
