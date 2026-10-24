@@ -292,7 +292,7 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
       <div className="notary-certificate-wrapper">
         <div className="notary-certificate-sheet">
           <div>
-            {/* Header (Official header for Adv. Nileema Saranga with Badlapur address) */}
+            {/* Header (Official Chamber Header with Address) */}
             <div className="cert-header">
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
                 <NotaryLogo size={50} showShadow={false} />

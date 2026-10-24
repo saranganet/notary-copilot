@@ -27,39 +27,15 @@ const STORAGE_KEYS = {
 
 export const PRESET_NOTARIES: NotaryProfile[] = [
   {
-    firmName: 'Advocate Nileema Saranga & Chambers',
-    notaryName: 'Adv. Nileema Saranga',
+    firmName: 'Advocate & Notary Public Chambers',
+    notaryName: 'Adv. Notary Public',
     qualifications: 'B.A., LL.B., Advocate & Notary Public',
-    regNo: 'Reg. No. 15960 / Govt. of India',
-    areaOfPractice: 'Badlapur, Ulhasnagar, Kalyan & Thane District',
-    officeAddress: 'Shop no. 12, Opp. IDBI Bank, Gandhi Chowk, Badlapur East, Thane 421503',
-    mobile: '+91 98220 12345',
-    email: 'adv.nileemasaranga@gmail.com',
-    verificationDomain: 'notary.saranga.in',
-    physicalStampingPreference: true,
-  },
-  {
-    firmName: 'Verma & Associates Legal Chamber',
-    notaryName: 'Adv. Rajesh K. Verma',
-    qualifications: 'B.Sc., LL.M., Notary Public',
-    regNo: 'Reg. No. 12480 / Govt. of India',
-    areaOfPractice: 'Patiala House Courts & New Delhi District',
-    officeAddress: 'Chamber 114, Lawyers Block, Patiala House Courts, New Delhi 110001',
-    mobile: '+91 98110 54321',
-    email: 'adv.rajeshverma@delhibar.org',
-    verificationDomain: 'verma-notary.gov.in',
-    physicalStampingPreference: true,
-  },
-  {
-    firmName: 'Kulkarni Notary Chambers',
-    notaryName: 'Adv. Anand R. Kulkarni',
-    qualifications: 'B.A., LL.B., Notary Public',
-    regNo: 'Reg. No. 18210 / Govt. of India',
-    areaOfPractice: 'Shivajinagar & Pune District',
-    officeAddress: 'Office 3, District Court Complex, Shivajinagar, Pune 411005',
-    mobile: '+91 94220 98765',
-    email: 'adv.anandkulkarni@punebar.in',
-    verificationDomain: 'kulkarni.notary.in',
+    regNo: 'Reg. No. 00000 / Govt. of India',
+    areaOfPractice: 'District & Sessions Court Jurisdiction',
+    officeAddress: 'Chambers Complex, District Court',
+    mobile: '+91 98000 00000',
+    email: 'notary@chambers.in',
+    verificationDomain: 'notary.verify.gov.in',
     physicalStampingPreference: true,
   },
 ];
@@ -148,10 +124,10 @@ export class StorageService {
       const stored: NotaryAccount[] = JSON.parse(raw);
       const accountsMap = new Map<string, NotaryAccount>();
 
-      // Preserve custom accounts created by admin (excluding old demo accounts)
+      // Preserve custom accounts created by admin (excluding old demo/seed accounts)
       stored.forEach((acc) => {
         const u = acc.username.toLowerCase();
-        if (u !== 'rajesh' && u !== 'anand') {
+        if (u !== 'rajesh' && u !== 'anand' && u !== 'nileema' && u !== 'adv.nutan') {
           accountsMap.set(u, acc);
         }
       });
@@ -425,26 +401,10 @@ export class StorageService {
    */
   public static getAccessRequests(): AccessRequest[] {
     const raw = localStorage.getItem(STORAGE_KEYS.ACCESS_REQUESTS);
-    if (!raw) {
-      // Seed with one sample demo request so the owner can see how it works!
-      const initial: AccessRequest[] = [
-        {
-          id: 'REQ-DEMO-01',
-          applicantName: 'Adv. Suresh M. Patil',
-          regNo: 'MH/19842/2024',
-          mobile: '+91 98230 45678',
-          email: 'adv.spatil@gmail.com',
-          jurisdiction: 'Kalyan & Dombivli District Court',
-          status: 'pending',
-          requestedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-          notes: 'Interested in digital register and biometric attestation for daily notary work.',
-        },
-      ];
-      localStorage.setItem(STORAGE_KEYS.ACCESS_REQUESTS, JSON.stringify(initial));
-      return initial;
-    }
+    if (!raw) return [];
     try {
-      return JSON.parse(raw);
+      const parsed: AccessRequest[] = JSON.parse(raw);
+      return parsed.filter((r) => r.id !== 'REQ-DEMO-01');
     } catch {
       return [];
     }
@@ -822,7 +782,7 @@ export class StorageService {
     const active = profile || this.getSessionUser() || this.getProfile();
     const acts = this.getActs(active);
     const year = new Date().getFullYear();
-    const initials = this.getNotaryInitials(active?.notaryName || 'Adv. Nileema Saranga');
+    const initials = this.getNotaryInitials(active?.notaryName || 'Adv. Notary Public');
     const prefix = `${initials}-${year}-`;
 
     const matchingActs = acts.filter((a) => a.serialNo && a.serialNo.startsWith(prefix));
