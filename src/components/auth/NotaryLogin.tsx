@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import type { NotaryProfile, AccessRequest } from '../../types/notary';
 import { StorageService } from '../../services/storageService';
-import { AUTHORIZED_ACCOUNTS } from '../../config/authorizedAccounts';
 import { TRANSLATIONS, type Language } from '../../i18n/translations';
 import { NotaryLogo } from '../common/NotaryLogo';
 import {
@@ -18,7 +17,6 @@ import {
   MessageCircle,
   ShieldCheck,
   Building2,
-  KeyRound,
 } from 'lucide-react';
 
 interface NotaryLoginProps {
@@ -41,7 +39,6 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
-  const [showQuickSelect, setShowQuickSelect] = useState<boolean>(false);
 
   // Request Access State
   const [reqName, setReqName] = useState<string>('');
@@ -81,12 +78,7 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
     }, 250);
   };
 
-  // Quick Autofill for Authorized Accounts
-  const handleAutofill = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setLoginError('');
-  };
+
 
   // Handle Request Access Submission
   const handleRequestSubmit = (e: React.FormEvent) => {
@@ -501,61 +493,6 @@ export const NotaryLogin: React.FC<NotaryLoginProps> = ({
                 <ArrowRight size={18} />
               </button>
 
-              {/* Quick Account Selector */}
-              <div style={{ marginTop: '1.5rem', background: '#F8FAFC', borderRadius: '12px', padding: '0.95rem 1rem', border: '1px solid #E2E8F0' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    color: '#475569',
-                  }}
-                  onClick={() => setShowQuickSelect(!showQuickSelect)}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <KeyRound size={14} color="#991B1B" />
-                    <span>Configured Chamber Accounts ({AUTHORIZED_ACCOUNTS.length})</span>
-                  </span>
-                  <span style={{ color: '#991B1B', fontSize: '0.74rem', fontWeight: 600 }}>
-                    {showQuickSelect ? 'Hide' : 'Quick Fill'}
-                  </span>
-                </div>
-
-                {showQuickSelect && (
-                  <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {AUTHORIZED_ACCOUNTS.map((acc) => (
-                      <div
-                        key={acc.username}
-                        onClick={() => handleAutofill(acc.username, acc.password)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '7px 10px',
-                          background: '#FFFFFF',
-                          borderRadius: '8px',
-                          border: '1px solid #E2E8F0',
-                          cursor: 'pointer',
-                          fontSize: '0.76rem',
-                          transition: 'all 0.15s ease',
-                        }}
-                        title={`Click to fill ${acc.profile.notaryName}`}
-                      >
-                        <div>
-                          <strong>{acc.profile.notaryName}</strong>
-                          <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{acc.profile.regNo}</div>
-                        </div>
-                        <div style={{ color: '#991B1B', fontWeight: 600, fontFamily: 'monospace' }}>
-                          user: <strong>{acc.username}</strong>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </form>
           ) : (
             /* TAB 2: REQUEST ACCESS FOR NEW ADVOCATES */
