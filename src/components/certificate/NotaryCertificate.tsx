@@ -87,6 +87,15 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
     }
   };
 
+  // Separate academic degree / educational qualifications from the Notary Public title
+  const rawQual = profile.qualifications || '';
+  const eduQualifications = rawQual
+    .replace(/,\s*(and|&)?\s*Advocate\s*&?\s*Notary\s*Public/i, '')
+    .replace(/,\s*(and|&)?\s*Notary\s*Public/i, '')
+    .replace(/Notary\s*Public/i, '')
+    .trim()
+    .replace(/,\s*$/, '');
+
   // Group parties by Executant vs Witness
   const executants = act.parties.filter((p) => p.role !== 'Witness');
   const witnesses = act.parties.filter((p) => p.role === 'Witness');
@@ -300,6 +309,25 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
               <div className="cert-firm-name">
                 {profile.firmName || profile.notaryName}
               </div>
+
+              {/* Line 1: Academic / Educational Qualifications (e.g. B.L.S, LL.B) */}
+              {eduQualifications && (
+                <div
+                  style={{
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    color: '#991B1B',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    marginTop: '2px',
+                    marginBottom: '1px',
+                  }}
+                >
+                  {eduQualifications}
+                </div>
+              )}
+
+              {/* Line 2: Notary Public Designation and Registration Number */}
               <div
                 style={{
                   fontSize: '0.85rem',
@@ -307,13 +335,14 @@ export const NotaryCertificate: React.FC<NotaryCertificateProps> = ({
                   color: '#991B1B',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
+                  marginTop: '1px',
                 }}
               >
                 {lang === 'mr'
-                  ? 'वकील आणि अधिकृत नॉटरी (भारत सरकार)'
+                  ? `अधिकृत नॉटरी (${profile.regNo})`
                   : lang === 'hi'
-                  ? 'अधिवक्ता एवं आधिकारिक नोटरी (भारत सरकार)'
-                  : `${profile.qualifications} (${profile.regNo})`}
+                  ? `आधिकारिक नोटरी (${profile.regNo})`
+                  : `NOTARY PUBLIC (${profile.regNo})`}
               </div>
               <div className="cert-doc-title">
                 {lang === 'mr' ? 'नॉटरी प्रमाणपत्र' : lang === 'hi' ? 'नोटरी प्रमाणपत्र' : 'Notary Certificate'}
